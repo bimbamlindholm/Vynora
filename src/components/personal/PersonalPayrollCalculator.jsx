@@ -272,34 +272,7 @@ export default function PersonalPayrollCalculator({
             )}
           </div>
 
-          {role !== "employee" && (
-            <div className="bg-slate-950/40 p-4 rounded-2xl border border-white/5 space-y-3">
-              <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Customize Active Date Range</span>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="grid gap-1 text-[10px] text-slate-500 font-bold">
-                  Start Date
-                  <input
-                    type="date"
-                    value={deductionsStart}
-                    onChange={(e) => setDeductionsStart(e.target.value)}
-                    className="h-9 px-3 rounded-lg bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-emerald-500/50"
-                  />
-                </label>
-                <label className="grid gap-1 text-[10px] text-slate-500 font-bold">
-                  End Date
-                  <input
-                    type="date"
-                    value={deductionsEnd}
-                    onChange={(e) => setDeductionsEnd(e.target.value)}
-                    className="h-9 px-3 rounded-lg bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-emerald-500/50"
-                  />
-                </label>
-              </div>
-              <p className="text-[9px] text-slate-500 italic leading-relaxed">
-                * Ang mga deductions sa ibaba ay ikakaltas lamang kapag ang kasalukuyang pay period ay sakop ng customize date range na ito.
-              </p>
-            </div>
-          )}
+
 
           <div className="space-y-3.5">
             {/* Baseline Lateness Docking */}

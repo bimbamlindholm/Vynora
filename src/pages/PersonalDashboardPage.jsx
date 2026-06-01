@@ -1695,8 +1695,8 @@ function PersonalDashboardPage() {
       latenessDeduction = (totalLateMinutes / 60) * settings.hourlyRate;
     }
 
-    // Check if within deductions date range
-    const inDeductionsRange = !deductionsStart || !deductionsEnd || (payrollStart >= deductionsStart && payrollEnd <= deductionsEnd);
+    // Check if within deductions date range - now always true to ignore date locks
+    const inDeductionsRange = true;
 
     // Custom manual deductions na ininput ng user - only count if applied and in range!
     const activeDeductionsCount = deductionsApplied && inDeductionsRange;
