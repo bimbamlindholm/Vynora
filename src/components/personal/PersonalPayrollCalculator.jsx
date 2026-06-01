@@ -233,6 +233,12 @@ export default function PersonalPayrollCalculator({
                 <span className="text-white font-black text-sm">PHP {payrollSummary.overtimeEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
+            {payrollSummary.nightDiffEarnings > 0 && (
+              <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
+                <span>Night Differential Pay</span>
+                <span className="text-white font-black text-sm">PHP {payrollSummary.nightDiffEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 font-black text-sm text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.05)]">
               <span>Total Gross Pay</span>
               <span className="text-base font-extrabold">PHP {payrollSummary.totalGrossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>

@@ -40,6 +40,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { supabase } from "../lib/supabaseClient";
 import { fetchMySchedules, saveSchedule, deleteSchedule } from "../utils/supabaseSchedule";
+import { calculateNightDifferentialMinutes } from "../utils/payrollCalculator";
 import HelpSystem from "../components/HelpSystem";
 import SkeletonLoader from "../components/SkeletonLoader";
 
@@ -326,6 +327,8 @@ function PersonalDashboardPage() {
     breakDurationMinutes: 60, // Standard unpaid break duration in minutes
     cutoffType: "monthly", // weekly, semi-monthly, monthly
     overtimeIncrementBlock: 1, // Overtime block setting
+    nightDiffRate: 0.10,
+    holidayOvertimeRate: 2.0,
   });
 
   // Goal Preferences state (stored in localStorage)
@@ -904,6 +907,9 @@ function PersonalDashboardPage() {
   // Load Settings and Local Goals
   useEffect(() => {
     if (workspace) {
+      const localHolidayOt = localStorage.getItem(`trackly_personal_holiday_ot_rate_${user?.id}`);
+      const localNightDiff = localStorage.getItem(`trackly_personal_night_diff_rate_${user?.id}`);
+
       // 1. Load base workspace settings
       let baseRules = {
         payType: workspace.default_daily_rate > 0 ? "daily" : "hourly",
@@ -919,6 +925,8 @@ function PersonalDashboardPage() {
         breakDurationMinutes: workspace.break_hours ? Math.round(workspace.break_hours * 60) : 60,
         cutoffType: workspace.payroll_period || "monthly",
         overtimeIncrementBlock: workspace.overtime_threshold_minutes || 1,
+        nightDiffRate: localNightDiff ? Number(localNightDiff) : (workspace.night_diff_rate || 0.10),
+        holidayOvertimeRate: localHolidayOt ? Number(localHolidayOt) : 2.0,
       };
 
       // 2. Override with custom rule presets if assigned to this employee
@@ -1061,18 +1069,23 @@ function PersonalDashboardPage() {
 
       if (dayShift) {
         if (dayShift.notes) {
-          if (dayShift.notes.includes("[REST_DAY]")) isRestDay = true;
-          else if (dayShift.notes.includes("[REG_HOLIDAY]")) isRegularHoliday = true;
-          else if (dayShift.notes.includes("[SPL_HOLIDAY]")) isSpecialHoliday = true;
+          const notesUpper = dayShift.notes.toUpperCase();
+          if (dayShift.notes.includes("[REST_DAY]")) {
+            isRestDay = true;
+          } else if (dayShift.notes.includes("[REG_HOLIDAY]") || notesUpper.includes("REGULAR HOLIDAY PAY") || notesUpper.includes("REGULAR HOLIDAY")) {
+            isRegularHoliday = true;
+          } else if (dayShift.notes.includes("[SPL_HOLIDAY]") || notesUpper.includes("SPECIAL HOLIDAY PAY") || notesUpper.includes("SPECIAL HOLIDAY")) {
+            isSpecialHoliday = true;
+          }
         }
 
         if (!isRestDay && !isRegularHoliday && !isSpecialHoliday) {
           const labelUpper = (dayShift.label || "").toUpperCase();
           if (labelUpper.includes("REST") || labelUpper.includes("REST DAY")) {
             isRestDay = true;
-          } else if (labelUpper.includes("REGULAR HOLIDAY") || labelUpper.includes("REG HOLIDAY")) {
+          } else if (labelUpper.includes("REGULAR HOLIDAY PAY") || labelUpper.includes("REGULAR HOLIDAY") || labelUpper.includes("REG HOLIDAY")) {
             isRegularHoliday = true;
-          } else if (labelUpper.includes("SPECIAL HOLIDAY") || labelUpper.includes("SPL HOLIDAY")) {
+          } else if (labelUpper.includes("SPECIAL HOLIDAY PAY") || labelUpper.includes("SPECIAL HOLIDAY") || labelUpper.includes("SPL HOLIDAY")) {
             isSpecialHoliday = true;
           }
         }
@@ -1222,9 +1235,23 @@ function PersonalDashboardPage() {
         regularPay = settings.dailyRate * progressRatio * multiplier;
       }
 
+      // Calculate Night Differential minutes for this day
+      const dayNightDiffMinutes = calculateNightDifferentialMinutes(
+        timeIn ? timeIn.timestamp : "",
+        timeOut ? timeOut.timestamp : "",
+        firstBreakIn ? firstBreakIn.timestamp : "",
+        lastBreakOut ? lastBreakOut.timestamp : ""
+      );
+
+      // Night Diff Pay is dynamic premium of the hourly rate for this day
+      const nightDiffRateMultiplier = Number(settings.nightDiffRate ?? 0.10);
+      const dayNightDiffPay = (dayNightDiffMinutes / 60) * (effectiveHourlyRate * multiplier) * nightDiffRateMultiplier;
+
       // OT Calculation
-      overtimePay = (overtimeMinutes / 60) * effectiveHourlyRate * settings.overtimeRate * multiplier;
-      const estimatedEarnings = regularPay + overtimePay;
+      const isHoliday = workType === "regular_holiday" || workType === "special_holiday";
+      const otMultiplier = isHoliday ? settings.holidayOvertimeRate : settings.overtimeRate;
+      overtimePay = (overtimeMinutes / 60) * effectiveHourlyRate * otMultiplier * multiplier;
+      const estimatedEarnings = regularPay + overtimePay + dayNightDiffPay;
 
       return {
         id: dateStr,
@@ -1247,6 +1274,8 @@ function PersonalDashboardPage() {
         status,
         regularPay,
         overtimePay,
+        nightDiffMinutes: dayNightDiffMinutes,
+        nightDiffPay: dayNightDiffPay,
         estimatedEarnings,
         isAbsent: !timeIn,
         events: sortedEvents,
@@ -1354,7 +1383,8 @@ function PersonalDashboardPage() {
 
     const basicEarnings = payrollRows.reduce((sum, r) => sum + (r.regularPay || 0), 0);
     const overtimeEarnings = payrollRows.reduce((sum, r) => sum + (r.overtimePay || 0), 0);
-    const totalGrossEarnings = basicEarnings + overtimeEarnings;
+    const nightDiffEarnings = payrollRows.reduce((sum, r) => sum + (r.nightDiffPay || 0), 0);
+    const totalGrossEarnings = basicEarnings + overtimeEarnings + nightDiffEarnings;
 
     // Awtomatikong bawas mula sa late docking
     let latenessDeduction;
@@ -1381,6 +1411,7 @@ function PersonalDashboardPage() {
       totalLateMinutes,
       basicEarnings,
       overtimeEarnings,
+      nightDiffEarnings,
       totalGrossEarnings,
       latenessDeduction,
       customDeductionsTotal,
@@ -1957,13 +1988,16 @@ function PersonalDashboardPage() {
           break_hours: Number(settings.breakDurationMinutes || 60) / 60,
           payroll_period: settings.cutoffType,
           overtime_threshold_minutes: Number(settings.overtimeIncrementBlock),
+          night_diff_rate: Number(settings.nightDiffRate),
         })
         .eq("id", workspace.id);
 
       if (error) throw error;
 
-      // Save Goals
+      // Save Goals & Custom Rates
       localStorage.setItem(`trackly_personal_goals_${user.id}`, JSON.stringify(goals));
+      localStorage.setItem(`trackly_personal_holiday_ot_rate_${user.id}`, settings.holidayOvertimeRate);
+      localStorage.setItem(`trackly_personal_night_diff_rate_${user.id}`, settings.nightDiffRate);
 
       addToast("Personal Settings saved successfully!", "success");
       // Trigger session hydration reload
@@ -2197,6 +2231,12 @@ function PersonalDashboardPage() {
                       <tr style="border-bottom: 1px solid #E2E8F0; font-size: 13px;">
                         <td style="padding: 10px; color: #475569;">Overtime Pay</td>
                         <td style="padding: 10px; text-align: right; color: #0F172A; font-weight: 500;">PHP ${payrollSummary.overtimeEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    ` : ''}
+                    ${payrollSummary.nightDiffEarnings > 0 ? `
+                      <tr style="border-bottom: 1px solid #E2E8F0; font-size: 13px;">
+                        <td style="padding: 10px; color: #475569;">Night Differential Pay</td>
+                        <td style="padding: 10px; text-align: right; color: #0F172A; font-weight: 500;">PHP ${payrollSummary.nightDiffEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     ` : ''}
                     <tr style="background-color: #F8FAFC; font-weight: bold; font-size: 13px;">
@@ -2977,7 +3017,7 @@ function PersonalDashboardPage() {
                           value={settings.overtimeRate}
                           onChange={(e) => setSettings({ ...settings, overtimeRate: e.target.value })}
                           disabled={role === "employee"}
-                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50"
+                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50 focus:border-emerald-500 outline-none"
                         />
                       </label>
 
@@ -2986,17 +3026,39 @@ function PersonalDashboardPage() {
                         <select
                           id="overtimeIncrementBlock"
                           name="overtimeIncrementBlock"
-                          value={settings.overtimeIncrementBlock}
-                          onChange={(e) => setSettings({ ...settings, overtimeIncrementBlock: Number(e.target.value) })}
+                          value={[1, 15, 30, 60].includes(Number(settings.overtimeIncrementBlock)) ? Number(settings.overtimeIncrementBlock) : "custom"}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "custom") {
+                              setSettings({ ...settings, overtimeIncrementBlock: 5 }); // default custom to 5 min
+                            } else {
+                              setSettings({ ...settings, overtimeIncrementBlock: Number(val) });
+                            }
+                          }}
                           disabled={role === "employee"}
-                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-emerald-500 disabled:opacity-50"
+                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-emerald-500 disabled:opacity-50 cursor-pointer"
                         >
                           <option value={1}>1 Minute (Continuous)</option>
                           <option value={15}>15 Minutes (Quarter-hour)</option>
                           <option value={30}>30 Minutes (Half-hour)</option>
                           <option value={60}>60 Minutes (Hourly)</option>
+                          <option value="custom">Custom (Minutes)</option>
                         </select>
                       </label>
+
+                      {![1, 15, 30, 60].includes(Number(settings.overtimeIncrementBlock)) && (
+                        <label className="grid gap-1.5 text-xs text-slate-400">
+                          Custom Block (Minutes)
+                          <input
+                            type="number"
+                            id="customOvertimeIncrementBlock"
+                            value={settings.overtimeIncrementBlock}
+                            onChange={(e) => setSettings({ ...settings, overtimeIncrementBlock: Math.max(1, Number(e.target.value)) })}
+                            disabled={role === "employee"}
+                            className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50 focus:border-emerald-500 outline-none"
+                          />
+                        </label>
+                      )}
 
                       <label className="grid gap-1.5 text-xs text-slate-400">
                         Regular Holiday Pay (Multiplier)
@@ -3008,7 +3070,7 @@ function PersonalDashboardPage() {
                           value={settings.holidayRegularRate}
                           onChange={(e) => setSettings({ ...settings, holidayRegularRate: e.target.value })}
                           disabled={role === "employee"}
-                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50"
+                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50 focus:border-emerald-500 outline-none"
                         />
                       </label>
 
@@ -3022,7 +3084,36 @@ function PersonalDashboardPage() {
                           value={settings.holidaySpecialRate}
                           onChange={(e) => setSettings({ ...settings, holidaySpecialRate: e.target.value })}
                           disabled={role === "employee"}
-                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50"
+                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50 focus:border-emerald-500 outline-none"
+                        />
+                      </label>
+
+                      <label className="grid gap-1.5 text-xs text-slate-400">
+                        Holiday OT Multiplier
+                        <input
+                          type="number"
+                          step="0.05"
+                          id="holidayOvertimeRate"
+                          name="holidayOvertimeRate"
+                          value={settings.holidayOvertimeRate}
+                          onChange={(e) => setSettings({ ...settings, holidayOvertimeRate: e.target.value })}
+                          disabled={role === "employee"}
+                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50 focus:border-emerald-500 outline-none"
+                        />
+                      </label>
+
+                      <label className="grid gap-1.5 text-xs text-slate-400">
+                        Night Differential Multiplier
+                        <input
+                          type="number"
+                          step="0.01"
+                          id="nightDiffRate"
+                          name="nightDiffRate"
+                          value={settings.nightDiffRate}
+                          onChange={(e) => setSettings({ ...settings, nightDiffRate: e.target.value })}
+                          disabled={role === "employee"}
+                          className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50 focus:border-emerald-500 outline-none"
+                          placeholder="e.g. 0.10 for 10% premium rate on hourly rate"
                         />
                       </label>
                     </div>
