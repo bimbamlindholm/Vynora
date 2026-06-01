@@ -26,7 +26,15 @@ export default function PersonalPayrollCalculator({
   role = "employee",
   payslipStatus = "none",
   loadingPayslipStatus = false,
-  handleRequestPayslip
+  handleRequestPayslip,
+  deductionsStart,
+  setDeductionsStart,
+  deductionsEnd,
+  setDeductionsEnd,
+  processedPayslips = [],
+  handleApplyDeductionClick,
+  handleClearProcessedHistory,
+  handlePrintHistoryPayslip
 }) {
   return (
     <div className="space-y-6">
@@ -264,6 +272,35 @@ export default function PersonalPayrollCalculator({
             )}
           </div>
 
+          {role !== "employee" && (
+            <div className="bg-slate-950/40 p-4 rounded-2xl border border-white/5 space-y-3">
+              <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Customize Active Date Range</span>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="grid gap-1 text-[10px] text-slate-500 font-bold">
+                  Start Date
+                  <input
+                    type="date"
+                    value={deductionsStart}
+                    onChange={(e) => setDeductionsStart(e.target.value)}
+                    className="h-9 px-3 rounded-lg bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-emerald-500/50"
+                  />
+                </label>
+                <label className="grid gap-1 text-[10px] text-slate-500 font-bold">
+                  End Date
+                  <input
+                    type="date"
+                    value={deductionsEnd}
+                    onChange={(e) => setDeductionsEnd(e.target.value)}
+                    className="h-9 px-3 rounded-lg bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-emerald-500/50"
+                  />
+                </label>
+              </div>
+              <p className="text-[9px] text-slate-500 italic leading-relaxed">
+                * Ang mga deductions sa ibaba ay ikakaltas lamang kapag ang kasalukuyang pay period ay sakop ng customize date range na ito.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-3.5">
             {/* Baseline Lateness Docking */}
             {payrollSummary.latenessDeduction > 0 && (
@@ -327,6 +364,27 @@ export default function PersonalPayrollCalculator({
               <span>Total Deductions</span>
               <span className="text-base font-extrabold">PHP {payrollSummary.totalDeductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
+
+            {role !== "employee" && (
+              <div className="pt-3 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleApplyDeductionClick}
+                  className={`w-full py-3 rounded-xl text-xs font-black text-white transition active:scale-95 shadow-md ${
+                    payrollSummary.deductionsApplied
+                      ? "bg-rose-500/20 border border-rose-500/35 hover:bg-rose-500/30 text-rose-300"
+                      : "glow-button bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 border border-rose-500/30"
+                  }`}
+                >
+                  {payrollSummary.deductionsApplied ? "✓ Deductions Applied (Re-Apply)" : "Apply Deductions (Deduct)"}
+                </button>
+                {!payrollSummary.deductionsApplied && (
+                  <span className="block text-[10px] text-slate-500 italic text-center font-bold">
+                    * Pindutin ang "Deduct" para opisyal na ibawas ang mga deductions at i-record ang payslip sa ibaba.
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -350,6 +408,73 @@ export default function PersonalPayrollCalculator({
           </span>
         </div>
       </div>
+
+      {/* Processed Payslips History List */}
+      {role !== "employee" && (
+        <div className="glass-panel border-white/5 bg-slate-900/20 p-6 sm:p-8 rounded-[2rem] shadow-xl space-y-6 backdrop-blur-md mt-6">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div>
+              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block">History Log</span>
+              <h3 className="text-sm font-black text-white mt-1">Deducted & Processed Payslip Records</h3>
+            </div>
+            {processedPayslips.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearProcessedHistory}
+                className="px-3 py-1.5 rounded-xl border border-rose-500/10 hover:border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/15 text-[10px] font-black text-rose-300 transition-all cursor-pointer"
+              >
+                Clear History
+              </button>
+            )}
+          </div>
+
+          {processedPayslips.length === 0 ? (
+            <div className="text-center py-10 text-xs text-slate-500 italic bg-slate-950/20 rounded-3xl border border-dashed border-white/5 leading-relaxed">
+              No processed payslips found.<br />
+              Pindutin ang **"Apply Deductions (Deduct)"** sa itaas para mag-record at makapag-print ng payslip dito.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {processedPayslips.map((slip) => (
+                <div key={slip.id} className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 hover:border-emerald-500/20 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      <span className="text-xs font-black text-white">Cutoff Period: {slip.payrollStart} to {slip.payrollEnd}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-semibold space-y-0.5 pl-4">
+                      <span className="block">Deductions Range: {slip.deductionsStart || "None"} to {slip.deductionsEnd || "None"}</span>
+                      <span className="block">Processed on: {slip.processedAt}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 pl-4 md:pl-0">
+                    <div className="text-left md:text-right">
+                      <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Gross Pay</span>
+                      <span className="block text-xs font-extrabold text-slate-300">PHP {slip.totalGrossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="text-left md:text-right">
+                      <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Deductions</span>
+                      <span className="block text-xs font-extrabold text-rose-400">PHP {slip.totalDeductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="text-left md:text-right">
+                      <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Net Take-Home</span>
+                      <span className="block text-sm font-black text-emerald-400">PHP {slip.netPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handlePrintHistoryPayslip(slip)}
+                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black transition-all active:scale-95 shadow-md shadow-emerald-500/10 cursor-pointer shrink-0"
+                    >
+                      Print Payslip PDF
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
