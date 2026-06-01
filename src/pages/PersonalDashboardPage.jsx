@@ -355,9 +355,15 @@ function PersonalDashboardPage() {
       const saved = localStorage.getItem(`trackly_processed_payslips_${user.id}`);
       if (saved) {
         try {
-          setProcessedPayslips(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setProcessedPayslips(parsed);
+          } else {
+            setProcessedPayslips([]);
+          }
         } catch (e) {
           console.error("Failed to parse processed payslips history", e);
+          setProcessedPayslips([]);
         }
       }
     }

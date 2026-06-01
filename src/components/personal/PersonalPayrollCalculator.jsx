@@ -233,23 +233,23 @@ export default function PersonalPayrollCalculator({
           <div className="space-y-3 font-semibold text-xs text-slate-300">
             <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
               <span>Basic Salary (Regular Hours)</span>
-              <span className="text-white font-black text-sm">PHP {payrollSummary.basicEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-white font-black text-sm">PHP {(payrollSummary?.basicEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            {payrollSummary.overtimeEarnings > 0 && (
+            {(payrollSummary?.overtimeEarnings || 0) > 0 && (
               <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
                 <span>Overtime Pay</span>
-                <span className="text-white font-black text-sm">PHP {payrollSummary.overtimeEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="text-white font-black text-sm">PHP {(payrollSummary?.overtimeEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
-            {payrollSummary.nightDiffEarnings > 0 && (
+            {(payrollSummary?.nightDiffEarnings || 0) > 0 && (
               <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
                 <span>Night Differential Pay</span>
-                <span className="text-white font-black text-sm">PHP {payrollSummary.nightDiffEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="text-white font-black text-sm">PHP {(payrollSummary?.nightDiffEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
             <div className="flex justify-between items-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 font-black text-sm text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.05)]">
               <span>Total Gross Pay</span>
-              <span className="text-base font-extrabold">PHP {payrollSummary.totalGrossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-base font-extrabold">PHP {(payrollSummary?.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
@@ -303,10 +303,10 @@ export default function PersonalPayrollCalculator({
 
           <div className="space-y-3.5">
             {/* Baseline Lateness Docking */}
-            {payrollSummary.latenessDeduction > 0 && (
+            {(payrollSummary?.latenessDeduction || 0) > 0 && (
               <div className="flex justify-between items-center p-3.5 rounded-xl bg-rose-500/5 border border-rose-500/10 text-xs font-semibold">
                 <span className="text-rose-300">Cutoff Lateness Docking</span>
-                <span className="text-rose-400 font-bold">PHP {payrollSummary.latenessDeduction.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="text-rose-400 font-bold">PHP {(payrollSummary?.latenessDeduction || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
 
@@ -362,7 +362,7 @@ export default function PersonalPayrollCalculator({
             {/* Deductions aggregates summary */}
             <div className="flex justify-between items-center p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 font-black text-sm text-rose-400 mt-2 shadow-[0_0_15px_rgba(244,63,94,0.05)]">
               <span>Total Deductions</span>
-              <span className="text-base font-extrabold">PHP {payrollSummary.totalDeductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-base font-extrabold">PHP {(payrollSummary?.totalDeductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
 
             {role !== "employee" && (
@@ -371,14 +371,14 @@ export default function PersonalPayrollCalculator({
                   type="button"
                   onClick={handleApplyDeductionClick}
                   className={`w-full py-3 rounded-xl text-xs font-black text-white transition active:scale-95 shadow-md ${
-                    payrollSummary.deductionsApplied
+                    payrollSummary?.deductionsApplied
                       ? "bg-rose-500/20 border border-rose-500/35 hover:bg-rose-500/30 text-rose-300"
                       : "glow-button bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 border border-rose-500/30"
                   }`}
                 >
-                  {payrollSummary.deductionsApplied ? "✓ Deductions Applied (Re-Apply)" : "Apply Deductions (Deduct)"}
+                  {payrollSummary?.deductionsApplied ? "✓ Deductions Applied (Re-Apply)" : "Apply Deductions (Deduct)"}
                 </button>
-                {!payrollSummary.deductionsApplied && (
+                {!payrollSummary?.deductionsApplied && (
                   <span className="block text-[10px] text-slate-500 italic text-center font-bold">
                     * Pindutin ang "Deduct" para opisyal na ibawas ang mga deductions at i-record ang payslip sa ibaba.
                   </span>
@@ -404,7 +404,7 @@ export default function PersonalPayrollCalculator({
         <div className="text-left md:text-right space-y-1">
           <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">Computed Net Pay</span>
           <span className="block text-3xl sm:text-4xl font-black text-white tracking-tight drop-shadow-[0_0_24px_rgba(52,211,153,0.3)] bg-gradient-to-r from-white via-white to-emerald-400 bg-clip-text text-transparent">
-            PHP {payrollSummary.netPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            PHP {(payrollSummary?.netPay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
       </div>
@@ -428,14 +428,14 @@ export default function PersonalPayrollCalculator({
             )}
           </div>
 
-          {processedPayslips.length === 0 ? (
+          {(!processedPayslips || !Array.isArray(processedPayslips) || processedPayslips.length === 0) ? (
             <div className="text-center py-10 text-xs text-slate-500 italic bg-slate-950/20 rounded-3xl border border-dashed border-white/5 leading-relaxed">
               No processed payslips found.<br />
               Pindutin ang **"Apply Deductions (Deduct)"** sa itaas para mag-record at makapag-print ng payslip dito.
             </div>
           ) : (
             <div className="space-y-4">
-              {processedPayslips.map((slip) => (
+              {processedPayslips.filter(Boolean).map((slip) => (
                 <div key={slip.id} className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 hover:border-emerald-500/20 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -451,15 +451,15 @@ export default function PersonalPayrollCalculator({
                   <div className="flex flex-wrap items-center gap-4 pl-4 md:pl-0">
                     <div className="text-left md:text-right">
                       <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Gross Pay</span>
-                      <span className="block text-xs font-extrabold text-slate-300">PHP {slip.totalGrossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="block text-xs font-extrabold text-slate-300">PHP {(slip.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div className="text-left md:text-right">
                       <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Deductions</span>
-                      <span className="block text-xs font-extrabold text-rose-400">PHP {slip.totalDeductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="block text-xs font-extrabold text-rose-400">PHP {(slip.totalDeductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div className="text-left md:text-right">
                       <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Net Take-Home</span>
-                      <span className="block text-sm font-black text-emerald-400">PHP {slip.netPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="block text-sm font-black text-emerald-400">PHP {(slip.netPay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <button
                       type="button"

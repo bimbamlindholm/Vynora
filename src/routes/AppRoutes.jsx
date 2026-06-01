@@ -49,6 +49,14 @@ function AppRoutes() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/personal_dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={["personal"]}>
+                <PersonalDashboardPage />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Fallback Route redirects to Landing or Dashboard */}
           <Route path="*" element={<LandingPage />} />
