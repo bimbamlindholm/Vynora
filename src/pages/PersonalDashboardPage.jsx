@@ -742,7 +742,9 @@ function PersonalDashboardPage() {
 
   // Onboarding Wizard States & Pre-fill Handler
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingError, setOnboardingError] = useState("");
   const [onboardingStep, setOnboardingStep] = useState(1);
+  const [validationAttempted, setValidationAttempted] = useState(false);
   const [onboardingForm, setOnboardingForm] = useState({
     fullName: "",
     age: "",
@@ -3042,6 +3044,17 @@ function PersonalDashboardPage() {
             ))}
           </div>
 
+          {/* Onboarding Error Warning Banner */}
+          {onboardingError && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs font-semibold text-rose-300 animate-pulse text-left flex items-start gap-2 shadow-[0_0_15px_rgba(244,63,94,0.1)]">
+              <span className="shrink-0 text-sm">⚠️</span>
+              <div>
+                <span className="block font-black uppercase text-[10px] tracking-wider text-rose-400">Required Information Missing</span>
+                <span className="block mt-0.5 leading-relaxed">{onboardingError}</span>
+              </div>
+            </div>
+          )}
+
           {/* STEP 1: WELCOME SCREEN */}
           {onboardingStep === 1 && (
             <div className="space-y-6">
@@ -3079,7 +3092,10 @@ function PersonalDashboardPage() {
 
               <button
                 type="button"
-                onClick={() => setOnboardingStep(2)}
+                onClick={() => {
+                  setOnboardingError("");
+                  setOnboardingStep(2);
+                }}
                 className="w-full h-14 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-sm font-black text-white rounded-xl shadow-lg shadow-cyan-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer mt-4"
               >
                 Let's Get Started 🚀
@@ -3103,7 +3119,10 @@ function PersonalDashboardPage() {
                     <button
                       key={av}
                       type="button"
-                      onClick={() => setOnboardingForm(current => ({ ...current, avatar: av }))}
+                      onClick={() => {
+                        setOnboardingError("");
+                        setOnboardingForm(current => ({ ...current, avatar: av }));
+                      }}
                       className={`h-14 w-14 rounded-2xl text-2xl flex items-center justify-center border transition-all active:scale-90 ${
                         onboardingForm.avatar === av
                           ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)] scale-105'
@@ -3134,46 +3153,78 @@ function PersonalDashboardPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* Full Name */}
                 <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
-                  Full Name
+                  Full Name <span className="text-rose-500">*</span>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">👤</span>
                     <input
                       type="text"
                       placeholder="Enter your full name"
                       value={onboardingForm.fullName}
-                      onChange={(e) => setOnboardingForm(current => ({ ...current, fullName: e.target.value }))}
-                      className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
+                      onChange={(e) => {
+                        setOnboardingError("");
+                        setOnboardingForm(current => ({ ...current, fullName: e.target.value }));
+                      }}
+                      className={`h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border text-xs text-white outline-none focus:bg-slate-950 transition-all ${
+                        validationAttempted && !onboardingForm.fullName.trim()
+                          ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
+                          : "border-white/10 focus:border-cyan-500"
+                      }`}
                       required
                     />
                   </div>
+                  {validationAttempted && !onboardingForm.fullName.trim() && (
+                    <span className="text-[10px] text-rose-400 font-black mt-1 flex items-center gap-1 animate-pulse">
+                      ⚠️ Full Name is required / Pakisulat po ang iyong pangalan.
+                    </span>
+                  )}
                 </label>
 
                 {/* Age */}
                 <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
-                  Age
+                  Age <span className="text-rose-500">*</span>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📅</span>
                     <input
                       type="number"
                       placeholder="e.g. 25"
                       value={onboardingForm.age}
-                      onChange={(e) => setOnboardingForm(current => ({ ...current, age: e.target.value }))}
-                      className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
+                      onChange={(e) => {
+                        setOnboardingError("");
+                        setOnboardingForm(current => ({ ...current, age: e.target.value }));
+                      }}
+                      className={`h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border text-xs text-white outline-none focus:bg-slate-950 transition-all ${
+                        validationAttempted && (!onboardingForm.age.trim() || isNaN(Number(onboardingForm.age)) || Number(onboardingForm.age) <= 0)
+                          ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
+                          : "border-white/10 focus:border-cyan-500"
+                      }`}
                       required
                     />
                   </div>
+                  {validationAttempted && !onboardingForm.age.trim() && (
+                    <span className="text-[10px] text-rose-400 font-black mt-1 flex items-center gap-1 animate-pulse">
+                      ⚠️ Age is required / Pakisulat po ang iyong edad.
+                    </span>
+                  )}
+                  {validationAttempted && onboardingForm.age.trim() && (isNaN(Number(onboardingForm.age)) || Number(onboardingForm.age) <= 0) && (
+                    <span className="text-[10px] text-rose-400 font-black mt-1 flex items-center gap-1 animate-pulse">
+                      ⚠️ Please enter a valid age / Maglagay po ng tamang edad.
+                    </span>
+                  )}
                 </label>
 
                 {/* Phone */}
                 <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
-                  Phone Number
+                  Phone Number <span className="text-slate-600 font-normal">(Optional)</span>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📞</span>
                     <input
                       type="tel"
                       placeholder="e.g. +639123456789"
                       value={onboardingForm.phone}
-                      onChange={(e) => setOnboardingForm(current => ({ ...current, phone: e.target.value }))}
+                      onChange={(e) => {
+                        setOnboardingError("");
+                        setOnboardingForm(current => ({ ...current, phone: e.target.value }));
+                      }}
                       className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
                     />
                   </div>
@@ -3181,25 +3232,41 @@ function PersonalDashboardPage() {
 
                 {/* Address */}
                 <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
-                  Address
+                  Address <span className="text-rose-500">*</span>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📍</span>
                     <input
                       type="text"
                       placeholder="e.g. Manila, Philippines"
                       value={onboardingForm.address}
-                      onChange={(e) => setOnboardingForm(current => ({ ...current, address: e.target.value }))}
-                      className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
+                      onChange={(e) => {
+                        setOnboardingError("");
+                        setOnboardingForm(current => ({ ...current, address: e.target.value }));
+                      }}
+                      className={`h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border text-xs text-white outline-none focus:bg-slate-950 transition-all ${
+                        validationAttempted && !onboardingForm.address.trim()
+                          ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
+                          : "border-white/10 focus:border-cyan-500"
+                      }`}
                       required
                     />
                   </div>
+                  {validationAttempted && !onboardingForm.address.trim() && (
+                    <span className="text-[10px] text-rose-400 font-black mt-1 flex items-center gap-1 animate-pulse">
+                      ⚠️ Address is required / Pakisulat po ang iyong tirahan.
+                    </span>
+                  )}
                 </label>
               </div>
 
               <div className="flex gap-3 pt-3">
                 <button
                   type="button"
-                  onClick={() => setOnboardingStep(1)}
+                  onClick={() => {
+                    setOnboardingError("");
+                    setValidationAttempted(false);
+                    setOnboardingStep(1);
+                  }}
                   className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   ◀ Back
@@ -3207,18 +3274,28 @@ function PersonalDashboardPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    setOnboardingError("");
                     if (!onboardingForm.fullName.trim()) {
-                      addToast("Please enter your name.", "warning");
+                      setOnboardingError("Full Name is required. Pakisulat po ang iyong pangalan.");
+                      setValidationAttempted(true);
                       return;
                     }
                     if (!onboardingForm.age.trim()) {
-                      addToast("Please enter your age.", "warning");
+                      setOnboardingError("Age is required. Pakisulat po ang iyong edad.");
+                      setValidationAttempted(true);
+                      return;
+                    }
+                    if (isNaN(Number(onboardingForm.age)) || Number(onboardingForm.age) <= 0) {
+                      setOnboardingError("Please enter a valid age.");
+                      setValidationAttempted(true);
                       return;
                     }
                     if (!onboardingForm.address.trim()) {
-                      addToast("Please enter your address.", "warning");
+                      setOnboardingError("Address is required. Pakisulat po ang iyong tirahan.");
+                      setValidationAttempted(true);
                       return;
                     }
+                    setValidationAttempted(false);
                     setOnboardingStep(3);
                   }}
                   className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10"
@@ -3240,11 +3317,18 @@ function PersonalDashboardPage() {
               <div className="grid gap-4">
                 {/* Discovery Source */}
                 <label className="grid gap-2 text-xs text-slate-400 font-bold">
-                  🔍 Where did you discover Trackly/Vynora?
+                  🔍 Where did you discover Trackly/Vynora? <span className="text-rose-500">*</span>
                   <select
                     value={onboardingForm.discoverySource}
-                    onChange={(e) => setOnboardingForm(current => ({ ...current, discoverySource: e.target.value }))}
-                    className="h-12 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500"
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, discoverySource: e.target.value }));
+                    }}
+                    className={`h-12 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none transition-all ${
+                      validationAttempted && !onboardingForm.discoverySource
+                        ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
+                        : "border-white/10 focus:border-cyan-500"
+                    }`}
                     required
                   >
                     <option value="">Select an option</option>
@@ -3255,15 +3339,27 @@ function PersonalDashboardPage() {
                     <option value="Github / Open Source Search">Github / Open Source Search</option>
                     <option value="Other">Other</option>
                   </select>
+                  {validationAttempted && !onboardingForm.discoverySource && (
+                    <span className="text-[10px] text-rose-400 font-black flex items-center gap-1 animate-pulse">
+                      ⚠️ Discovery Source is required. Pakisagot po kung saan ninyo kami natuklasan.
+                    </span>
+                  )}
                 </label>
 
                 {/* Purpose */}
                 <label className="grid gap-2 text-xs text-slate-400 font-bold">
-                  🎯 What is your main purpose on using Trackly?
+                  🎯 What is your main purpose on using Trackly? <span className="text-rose-500">*</span>
                   <select
                     value={onboardingForm.purpose}
-                    onChange={(e) => setOnboardingForm(current => ({ ...current, purpose: e.target.value }))}
-                    className="h-12 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500"
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, purpose: e.target.value }));
+                    }}
+                    className={`h-12 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none transition-all ${
+                      validationAttempted && !onboardingForm.purpose
+                        ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
+                        : "border-white/10 focus:border-cyan-500"
+                    }`}
                     required
                   >
                     <option value="">Select an option</option>
@@ -3273,15 +3369,27 @@ function PersonalDashboardPage() {
                     <option value="Increase focus and work productivity">Increase focus and work productivity</option>
                     <option value="Other">Other</option>
                   </select>
+                  {validationAttempted && !onboardingForm.purpose && (
+                    <span className="text-[10px] text-rose-400 font-black flex items-center gap-1 animate-pulse">
+                      ⚠️ Main Purpose is required. Pakisagot po ang layunin ng paggamit ninyo ng Trackly.
+                    </span>
+                  )}
                 </label>
 
                 {/* Professional Status */}
                 <label className="grid gap-2 text-xs text-slate-400 font-bold">
-                  👔 What is your current professional status?
+                  👔 What is your current professional status? <span className="text-rose-500">*</span>
                   <select
                     value={onboardingForm.employmentStatus}
-                    onChange={(e) => setOnboardingForm(current => ({ ...current, employmentStatus: e.target.value }))}
-                    className="h-12 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500"
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, employmentStatus: e.target.value }));
+                    }}
+                    className={`h-12 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none transition-all ${
+                      validationAttempted && !onboardingForm.employmentStatus
+                        ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
+                        : "border-white/10 focus:border-cyan-500"
+                    }`}
                     required
                   >
                     <option value="">Select an option</option>
@@ -3291,13 +3399,22 @@ function PersonalDashboardPage() {
                     <option value="Student">Student / Scholar</option>
                     <option value="Other">Other / Self-employed</option>
                   </select>
+                  {validationAttempted && !onboardingForm.employmentStatus && (
+                    <span className="text-[10px] text-rose-400 font-black flex items-center gap-1 animate-pulse">
+                      ⚠️ Professional Status is required. Pakisagot po ang inyong propesyon.
+                    </span>
+                  )}
                 </label>
               </div>
 
               <div className="flex gap-3 pt-3">
                 <button
                   type="button"
-                  onClick={() => setOnboardingStep(2)}
+                  onClick={() => {
+                    setOnboardingError("");
+                    setValidationAttempted(false);
+                    setOnboardingStep(2);
+                  }}
                   className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   ◀ Back
@@ -3305,18 +3422,23 @@ function PersonalDashboardPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    setOnboardingError("");
                     if (!onboardingForm.discoverySource) {
-                      addToast("Please answer how you discovered us.", "warning");
+                      setOnboardingError("Discovery Source is required. Pakisagot po kung saan ninyo kami natuklasan.");
+                      setValidationAttempted(true);
                       return;
                     }
                     if (!onboardingForm.purpose) {
-                      addToast("Please select your main purpose.", "warning");
+                      setOnboardingError("Main Purpose is required. Pakisagot po ang layunin ng paggamit ninyo ng Trackly.");
+                      setValidationAttempted(true);
                       return;
                     }
                     if (!onboardingForm.employmentStatus) {
-                      addToast("Please select your professional status.", "warning");
+                      setOnboardingError("Professional Status is required. Pakisagot po ang inyong kasalukuyang propesyon.");
+                      setValidationAttempted(true);
                       return;
                     }
+                    setValidationAttempted(false);
                     setOnboardingStep(4);
                   }}
                   className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10"
@@ -3359,7 +3481,10 @@ function PersonalDashboardPage() {
                 <button
                   type="button"
                   disabled={submitting}
-                  onClick={() => setOnboardingStep(3)}
+                  onClick={() => {
+                    setOnboardingError("");
+                    setOnboardingStep(3);
+                  }}
                   className="h-14 w-20 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center"
                 >
                   ◀ Back
