@@ -83,7 +83,7 @@ export async function saveSchedule({
 
   const { data, error } = await supabase
     .from("schedules")
-    .upsert(payload)
+    .upsert(payload, { onConflict: "user_id,date" })
     .select()
     .single();
 
