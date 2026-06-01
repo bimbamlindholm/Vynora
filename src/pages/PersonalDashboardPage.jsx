@@ -615,9 +615,15 @@ function PersonalDashboardPage() {
       const saved = localStorage.getItem(`trackly_personal_diary_${user.id}`);
       if (saved) {
         try {
-          setDiaryNotes(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === "object") {
+            setDiaryNotes(parsed);
+          } else {
+            setDiaryNotes({});
+          }
         } catch (e) {
           console.error("Failed to parse diary notes", e);
+          setDiaryNotes({});
         }
       }
     }
@@ -985,9 +991,15 @@ function PersonalDashboardPage() {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
-        setRawRecords(JSON.parse(cached));
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          setRawRecords(parsed);
+        } else {
+          setRawRecords([]);
+        }
       } catch (e) {
         console.error("Failed to parse cached records", e);
+        setRawRecords([]);
       }
     }
 
@@ -1028,9 +1040,15 @@ function PersonalDashboardPage() {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
-        setSchedules(JSON.parse(cached));
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          setSchedules(parsed);
+        } else {
+          setSchedules([]);
+        }
       } catch (e) {
         console.error("Failed to parse cached schedules", e);
+        setSchedules([]);
       }
     }
 
@@ -1168,8 +1186,8 @@ function PersonalDashboardPage() {
       };
 
       // 2. Override with custom rule presets if assigned to this employee
-      const presets = workspace.custom_rules_presets || [];
-      const activePreset = presets.find(p => p.targetEmployeeIds && p.targetEmployeeIds.includes(user?.id));
+      const presets = Array.isArray(workspace?.custom_rules_presets) ? workspace.custom_rules_presets : [];
+      const activePreset = presets.find(p => p && p.targetEmployeeIds && Array.isArray(p.targetEmployeeIds) && p.targetEmployeeIds.includes(user?.id));
       if (activePreset) {
         const isDaily = activePreset.salaryModel === "daily";
         baseRules = {
@@ -1200,9 +1218,18 @@ function PersonalDashboardPage() {
       const savedGoals = localStorage.getItem(`trackly_personal_goals_${user.id}`);
       if (savedGoals) {
         try {
-          setGoals(JSON.parse(savedGoals));
+          const parsed = JSON.parse(savedGoals);
+          if (parsed && typeof parsed === "object") {
+            setGoals({
+              targetEarnings: Number(parsed.targetEarnings ?? 20000),
+              targetHours: Number(parsed.targetHours ?? 160),
+            });
+          } else {
+            setGoals({ targetEarnings: 20000, targetHours: 160 });
+          }
         } catch (e) {
           console.error("Failed to parse goals", e);
+          setGoals({ targetEarnings: 20000, targetHours: 160 });
         }
       }
     }
@@ -1241,9 +1268,11 @@ function PersonalDashboardPage() {
   // Aggregation Engine: Groups individual events into complete daily log rows
   const dailyRows = useMemo(() => {
     const daysMap = {};
+    if (!rawRecords || !Array.isArray(rawRecords)) return [];
 
     // Group events by date key
     rawRecords.forEach((rec) => {
+      if (!rec || !rec.date) return;
       const dKey = rec.date;
       if (!daysMap[dKey]) {
         daysMap[dKey] = [];
@@ -1252,8 +1281,13 @@ function PersonalDashboardPage() {
     });
 
     return Object.entries(daysMap).map(([dateStr, events]) => {
-      // Sort events by timestamp
-      const sortedEvents = events.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      // Sort events by timestamp safely
+      const sortedEvents = events.filter(e => e && e.timestamp).sort((a, b) => {
+        const tA = new Date(a.timestamp).getTime();
+        const tB = new Date(b.timestamp).getTime();
+        if (isNaN(tA) || isNaN(tB)) return 0;
+        return tA - tB;
+      });
 
       // Extract actions
       const timeIn = sortedEvents.find(e => e.action === "time_in");
@@ -1290,11 +1324,11 @@ function PersonalDashboardPage() {
         breakOutStr = breaks.map(b => formatTimeOption(b.breakOut)).join(", ");
       }
 
-            // Metadata extracted from comments & custom schedules
-      const dayShift = schedules.find(s => s.date === dateStr);
-      const dayBreakIsPaid = dayShift && dayShift.notes && dayShift.notes.includes("[PAID_BREAK]") 
+      // Metadata extracted from comments & custom schedules safely
+      const dayShift = Array.isArray(schedules) ? schedules.find(s => s && s.date === dateStr) : null;
+      const dayBreakIsPaid = dayShift && typeof dayShift.notes === "string" && dayShift.notes.includes("[PAID_BREAK]") 
         ? true 
-        : (dayShift && dayShift.notes && dayShift.notes.includes("[UNPAID_BREAK]") 
+        : (dayShift && typeof dayShift.notes === "string" && dayShift.notes.includes("[UNPAID_BREAK]") 
           ? false 
           : !!settings.breakIsPaid);
       
@@ -1306,7 +1340,7 @@ function PersonalDashboardPage() {
       let isSpecialHoliday = false;
 
       if (dayShift) {
-        if (dayShift.notes) {
+        if (dayShift.notes && typeof dayShift.notes === "string") {
           const notesUpper = dayShift.notes.toUpperCase();
           if (dayShift.notes.includes("[REST_DAY]")) {
             isRestDay = true;
@@ -1318,7 +1352,7 @@ function PersonalDashboardPage() {
         }
 
         if (!isRestDay && !isRegularHoliday && !isSpecialHoliday) {
-          const labelUpper = (dayShift.label || "").toUpperCase();
+          const labelUpper = (dayShift.label || "").toString().toUpperCase();
           if (labelUpper.includes("REST") || labelUpper.includes("REST DAY")) {
             isRestDay = true;
           } else if (labelUpper.includes("REGULAR HOLIDAY PAY") || labelUpper.includes("REGULAR HOLIDAY") || labelUpper.includes("REG HOLIDAY")) {
@@ -1362,11 +1396,11 @@ function PersonalDashboardPage() {
       if (timeIn) {
         let payableStart = new Date(timeIn.timestamp);
         
-        if (activeShiftStart) {
+        if (activeShiftStart && typeof activeShiftStart === "string" && activeShiftStart.includes(":")) {
           const inDate = new Date(timeIn.timestamp);
           const [shiftH, shiftM] = activeShiftStart.split(":").map(Number);
           const shiftStart = new Date(inDate);
-          shiftStart.setHours(shiftH, shiftM, 0, 0);
+          shiftStart.setHours(shiftH || 0, shiftM || 0, 0, 0);
           
           // Early Clock-in Rule: Worked minutes count only starts at shift start
           if (inDate < shiftStart) {
@@ -1390,7 +1424,7 @@ function PersonalDashboardPage() {
               const bStart = new Date(b.breakIn);
               const bEnd = new Date(b.breakOut);
               const actualDurationMs = bEnd - bStart;
-              const standardDurationMs = Number(settings.breakDurationMinutes || 60) * 60 * 1000;
+              const standardDurationMs = Number(settings?.breakDurationMinutes || 60) * 60 * 1000;
               const requiredBreakEnd = new Date(bStart.getTime() + standardDurationMs);
 
               const deductionMs = endTime < requiredBreakEnd
@@ -1412,21 +1446,22 @@ function PersonalDashboardPage() {
 
       // Lateness tracker relative to scheduled shift
       let lateMinutes = 0;
-      if (timeIn && activeShiftStart) {
+      if (timeIn && activeShiftStart && typeof activeShiftStart === "string" && activeShiftStart.includes(":")) {
         const inDate = new Date(timeIn.timestamp);
         const [shiftH, shiftM] = activeShiftStart.split(":").map(Number);
         const shiftStart = new Date(inDate);
-        shiftStart.setHours(shiftH, shiftM, 0, 0);
+        shiftStart.setHours(shiftH || 0, shiftM || 0, 0, 0);
 
         const diffMinutes = Math.round((inDate - shiftStart) / 60000);
-        if (diffMinutes > settings.graceMinutes) {
+        if (diffMinutes > (settings?.graceMinutes || 0)) {
           lateMinutes = diffMinutes;
         }
       }
 
       // Overtime tracker (with expectedWorkHours dynamically calculated if shift times are explicit)
-      let dayExpectedWorkHours = settings.expectedWorkHours;
-      if (activeShiftStart && activeShiftEnd) {
+      let dayExpectedWorkHours = settings?.expectedWorkHours || 8;
+      if (activeShiftStart && typeof activeShiftStart === "string" && activeShiftStart.includes(":") &&
+          activeShiftEnd && typeof activeShiftEnd === "string" && activeShiftEnd.includes(":")) {
         const [sh, sm] = activeShiftStart.split(":").map(Number);
         const [eh, em] = activeShiftEnd.split(":").map(Number);
         if (!(sh === 0 && sm === 0 && eh === 0 && em === 0) && activeShiftStart !== activeShiftEnd) {
@@ -1442,35 +1477,35 @@ function PersonalDashboardPage() {
       
       if (workedMinutes > expectedMinutes) {
         const rawOvertimeMinutes = workedMinutes - expectedMinutes;
-        const block = Number(settings.overtimeIncrementBlock || 1);
+        const block = Number(settings?.overtimeIncrementBlock || 1);
         overtimeMinutes = Math.floor(rawOvertimeMinutes / block) * block;
       }
 
       // Salary math
       const multiplier = workType === "regular_holiday"
-        ? settings.holidayRegularRate
+        ? (settings?.holidayOvertimeRate || 2.0)
         : workType === "special_holiday"
-          ? settings.holidaySpecialRate
+          ? (settings?.holidaySpecialRate || 1.3)
           : workType === "rest_day"
-            ? settings.restDayRate
+            ? (settings?.restDayRate || 1.3)
             : 1.0;
 
-      const effectiveHourlyRate = settings.payType === "hourly"
-        ? settings.hourlyRate
-        : settings.dailyRate / dayExpectedWorkHours;
+      const effectiveHourlyRate = settings?.payType === "hourly"
+        ? (settings?.hourlyRate || 100)
+        : (settings?.dailyRate || 800) / dayExpectedWorkHours;
 
       let regularPay;
       let overtimePay;
 
-      if (settings.payType === "hourly") {
+      if (settings?.payType === "hourly") {
         const regularHours = Math.max(0, Math.min(workedMinutes - overtimeMinutes, expectedMinutes) / 60);
-        regularPay = regularHours * settings.hourlyRate * multiplier;
+        regularPay = regularHours * (settings?.hourlyRate || 100) * multiplier;
       } else {
         // Daily Rate model must stay proportional until the expected payable hours are completed.
         // This keeps same-day running pay accurate and prevents a short timed-out session from showing a full day pay.
         const regularWorkedMinutes = Math.max(0, Math.min(workedMinutes, expectedMinutes));
         const progressRatio = Math.min(regularWorkedMinutes / expectedMinutes, 1);
-        regularPay = settings.dailyRate * progressRatio * multiplier;
+        regularPay = (settings?.dailyRate || 800) * progressRatio * multiplier;
       }
 
       // Calculate Night Differential minutes for this day
@@ -1482,12 +1517,12 @@ function PersonalDashboardPage() {
       );
 
       // Night Diff Pay is dynamic premium of the hourly rate for this day
-      const nightDiffRateMultiplier = Number(settings.nightDiffRate ?? 0.10);
+      const nightDiffRateMultiplier = Number(settings?.nightDiffRate ?? 0.10);
       const dayNightDiffPay = (dayNightDiffMinutes / 60) * (effectiveHourlyRate * multiplier) * nightDiffRateMultiplier;
 
       // OT Calculation
       const isHoliday = workType === "regular_holiday" || workType === "special_holiday";
-      const otMultiplier = isHoliday ? settings.holidayOvertimeRate : settings.overtimeRate;
+      const otMultiplier = isHoliday ? (settings?.holidayOvertimeRate || 2.0) : (settings?.overtimeRate || 1.25);
       overtimePay = (overtimeMinutes / 60) * effectiveHourlyRate * otMultiplier * multiplier;
       const estimatedEarnings = regularPay + overtimePay + dayNightDiffPay;
 
