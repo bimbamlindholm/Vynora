@@ -50,13 +50,38 @@ export function AuthProvider({ children }) {
     setUser(authUser);
 
     // Fetch user profile from public.profiles
-    const { data: profileData, error: profileError } = await supabase
+    let { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", authUser.id)
       .maybeSingle();
 
     if (profileError) throw profileError;
+
+    // If profile is missing (e.g. because tables were recreated), auto-create a default one!
+    if (!profileData) {
+      console.log("[AuthContext] Profile missing for logged-in user. Auto-creating...");
+      const defaultProfile = {
+        id: authUser.id,
+        email: authUser.email,
+        full_name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "User",
+        role: "personal",
+        subscription_tier: "free",
+        subscription_status: "active",
+      };
+
+      const { data: insertedData, error: insertError } = await supabase
+        .from("profiles")
+        .insert(defaultProfile)
+        .select()
+        .maybeSingle();
+
+      if (insertError) {
+        console.error("[AuthContext] Failed to auto-create missing profile:", insertError);
+      } else {
+        profileData = insertedData;
+      }
+    }
 
     // Force profile role to personal
     if (profileData && profileData.role !== "personal") {

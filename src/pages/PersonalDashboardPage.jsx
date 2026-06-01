@@ -690,7 +690,10 @@ function PersonalDashboardPage() {
 
   // Fetch all personal DTR records from Supabase (Stale-While-Revalidate Caching Layer)
   const fetchRecords = async () => {
-    if (!workspace?.id || !user?.id) return;
+    if (!workspace?.id || !user?.id) {
+      setLoading(false);
+      return;
+    }
 
     // Load from cache first for instant hydration
     const cacheKey = `trackly_records_cache_${user.id}`;
