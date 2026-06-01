@@ -197,10 +197,11 @@ const PERSONAL_TABS = new Set([
   "profile",
 ]);
 
-function getSavedPersonalTab() {
+function getSavedPersonalTab(profileId) {
   if (typeof window === "undefined") return "dashboard";
 
-  const savedTab = window.localStorage.getItem("trackly_personal_active_tab");
+  const key = profileId ? `trackly_personal_active_tab_${profileId}` : "trackly_personal_active_tab";
+  const savedTab = window.localStorage.getItem(key);
   return PERSONAL_TABS.has(savedTab) ? savedTab : "dashboard";
 }
 
@@ -251,7 +252,7 @@ function PersonalDashboardPage() {
   };
 
   // Navigation state
-  const [activeTab, setActiveTab] = useState(getSavedPersonalTab); // remembers selected page after refresh/tab switch
+  const [activeTab, setActiveTab] = useState(() => getSavedPersonalTab()); // remembers selected page after refresh/tab switch
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -259,6 +260,16 @@ function PersonalDashboardPage() {
       setActiveTab("dashboard");
     }
   }, [role, activeTab]);
+
+  // Restore user-specific saved tab once profile loads
+  useEffect(() => {
+    if (profile && profile.id) {
+      const savedTab = window.localStorage.getItem(`trackly_personal_active_tab_${profile.id}`);
+      if (PERSONAL_TABS.has(savedTab)) {
+        setActiveTab(savedTab);
+      }
+    }
+  }, [profile]);
 
   // Interactive Demo Subscription State
   const [subscriptionTier, setSubscriptionTier] = useState(() => {
@@ -274,11 +285,15 @@ function PersonalDashboardPage() {
     }
   }, [profile]);
 
+  // Save active tab to localStorage (both global and user-specific)
   useEffect(() => {
     if (PERSONAL_TABS.has(activeTab)) {
       window.localStorage.setItem("trackly_personal_active_tab", activeTab);
+      if (profile && profile.id) {
+        window.localStorage.setItem(`trackly_personal_active_tab_${profile.id}`, activeTab);
+      }
     }
-  }, [activeTab]);
+  }, [activeTab, profile]);
 
   // Profile form states
   const [profileForm, setProfileForm] = useState({
@@ -756,20 +771,60 @@ function PersonalDashboardPage() {
     employmentStatus: "",
   });
 
+  // Restore onboarding step & form once profile loads
   useEffect(() => {
     if (profile && profile.id) {
       const onboarded = localStorage.getItem(`trackly_onboarded_${profile.id}`);
       if (!onboarded) {
         setShowOnboarding(true);
+        
+        // 1. Restore step
+        const savedStep = localStorage.getItem(`trackly_onboarding_step_${profile.id}`);
+        if (savedStep) {
+          const stepNum = parseInt(savedStep, 10);
+          if (stepNum >= 1 && stepNum <= 4) {
+            setOnboardingStep(stepNum);
+          }
+        }
+        
+        // 2. Restore form fields
+        const savedForm = localStorage.getItem(`trackly_onboarding_form_${profile.id}`);
+        let parsedForm = {};
+        if (savedForm) {
+          try {
+            parsedForm = JSON.parse(savedForm) || {};
+          } catch (e) {
+            console.error("Failed to parse saved onboarding form:", e);
+          }
+        }
+        
         setOnboardingForm(current => ({
           ...current,
-          fullName: current.fullName || profile.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "",
-          phone: current.phone || profile.phone || "",
-          address: current.address || profile.address || "",
+          fullName: parsedForm.fullName || current.fullName || profile.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "",
+          age: parsedForm.age || current.age || "",
+          address: parsedForm.address || current.address || profile.address || "",
+          phone: parsedForm.phone || current.phone || profile.phone || "",
+          avatar: parsedForm.avatar || current.avatar || "🚀",
+          discoverySource: parsedForm.discoverySource || current.discoverySource || "",
+          purpose: parsedForm.purpose || current.purpose || "",
+          employmentStatus: parsedForm.employmentStatus || current.employmentStatus || "",
         }));
       }
     }
   }, [profile, user]);
+
+  // Persist onboarding step & form on changes
+  useEffect(() => {
+    if (profile && profile.id && showOnboarding) {
+      localStorage.setItem(`trackly_onboarding_step_${profile.id}`, onboardingStep.toString());
+    }
+  }, [onboardingStep, profile, showOnboarding]);
+
+  useEffect(() => {
+    if (profile && profile.id && showOnboarding) {
+      localStorage.setItem(`trackly_onboarding_form_${profile.id}`, JSON.stringify(onboardingForm));
+    }
+  }, [onboardingForm, profile, showOnboarding]);
 
   const handleAvatarFileChange = (e) => {
     const file = e.target.files[0];
@@ -802,6 +857,10 @@ function PersonalDashboardPage() {
       localStorage.setItem(`trackly_purpose_${profile.id}`, onboardingForm.purpose);
       localStorage.setItem(`trackly_employment_${profile.id}`, onboardingForm.employmentStatus);
       localStorage.setItem(`trackly_age_${profile.id}`, onboardingForm.age);
+
+      // Clean up onboarding temporary states
+      localStorage.removeItem(`trackly_onboarding_step_${profile.id}`);
+      localStorage.removeItem(`trackly_onboarding_form_${profile.id}`);
 
       addToast("Setup complete! Welcome to Vynora.", "success");
       setShowOnboarding(false);
