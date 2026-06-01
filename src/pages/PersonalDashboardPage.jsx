@@ -360,6 +360,7 @@ function PersonalDashboardPage() {
   useEffect(() => {
     if (payrollStart && !deductionsStart) setDeductionsStart(payrollStart);
     if (payrollEnd && !deductionsEnd) setDeductionsEnd(payrollEnd);
+    setDeductionsApplied(false);
   }, [payrollStart, payrollEnd]);
 
   // Load processed payslips history from localStorage
@@ -387,6 +388,15 @@ function PersonalDashboardPage() {
 
     setDeductionsApplied(true);
 
+    // Calculate deductions and net pay synchronously to avoid React state update latency
+    const inDeductionsRange = !deductionsStart || !deductionsEnd || (payrollStart >= deductionsStart && payrollEnd <= deductionsEnd);
+    const customDeductionsTotal = inDeductionsRange ? payrollDeductions.reduce(
+      (sum, d) => sum + (Number(d.amount) || 0),
+      0
+    ) : 0;
+    const totalDeductions = payrollSummary.latenessDeduction + customDeductionsTotal;
+    const netPay = Math.max(0, payrollSummary.totalGrossEarnings - totalDeductions);
+
     const newSlip = {
       id: `slip_${Date.now()}`,
       payrollStart,
@@ -399,9 +409,9 @@ function PersonalDashboardPage() {
       totalGrossEarnings: payrollSummary.totalGrossEarnings,
       latenessDeduction: payrollSummary.latenessDeduction,
       customDeductions: payrollDeductions.map(d => ({ name: d.name, amount: Number(d.amount) || 0 })),
-      customDeductionsTotal: payrollSummary.customDeductionsTotal,
-      totalDeductions: payrollSummary.totalDeductions,
-      netPay: payrollSummary.netPay,
+      customDeductionsTotal,
+      totalDeductions,
+      netPay,
       processedAt: new Date().toLocaleDateString(undefined, {
         month: 'short',
         day: 'numeric',
