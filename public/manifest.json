@@ -1,0 +1,29 @@
+{
+  "short_name": "Trackly",
+  "name": "Trackly V3 - Corporate DTR & Payroll",
+  "description": "Premium Enterprise Daily Time Record (DTR) & Automated Payroll SaaS System.",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "type": "image/png",
+      "sizes": "64x64"
+    },
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#07111F",
+  "theme_color": "#07111F",
+  "display": "standalone",
+  "orientation": "portrait"
+}
