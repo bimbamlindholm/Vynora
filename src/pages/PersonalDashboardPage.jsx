@@ -441,6 +441,12 @@ function PersonalDashboardPage() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
+    // Calculate totals dynamically so even old/stale records show correct values
+    const lateness = Number(slip.latenessDeduction) || 0;
+    const customDeductionsSum = (slip.customDeductions || []).reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+    const computedTotalDeductions = lateness + customDeductionsSum;
+    const computedNetPay = Math.max(0, (slip.totalGrossEarnings || 0) - computedTotalDeductions);
+
     const deductionsListHTML = [
       ...(slip.latenessDeduction > 0 ? [`
         <tr style="border-bottom: 1px solid #E2E8F0; font-size: 13px;">
@@ -567,7 +573,7 @@ function PersonalDashboardPage() {
                     `}
                     <tr style="background-color: #F8FAFC; font-weight: bold; font-size: 13px;">
                       <td style="padding: 10px; color: #0F172A;">Total Deductions</td>
-                      <td style="padding: 10px; text-align: right; color: #E11D48;">PHP ${slip.totalDeductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td style="padding: 10px; text-align: right; color: #E11D48;">PHP ${computedTotalDeductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -579,7 +585,7 @@ function PersonalDashboardPage() {
                 <div class="summary-title">Net Take-Home Pay</div>
                 <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">Gross Pay minus Total Deductions</div>
               </div>
-              <div class="summary-value">PHP ${slip.netPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div class="summary-value">PHP ${computedNetPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </div>
 
             <div class="sign-section">

@@ -435,42 +435,49 @@ export default function PersonalPayrollCalculator({
             </div>
           ) : (
             <div className="space-y-4">
-              {processedPayslips.filter(Boolean).map((slip) => (
-                <div key={slip.id} className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 hover:border-emerald-500/20 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                      <span className="text-xs font-black text-white">Cutoff Period: {slip.payrollStart} to {slip.payrollEnd}</span>
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-semibold space-y-0.5 pl-4">
-                      <span className="block">Deductions Range: {slip.deductionsStart || "None"} to {slip.deductionsEnd || "None"}</span>
-                      <span className="block">Processed on: {slip.processedAt}</span>
-                    </div>
-                  </div>
+              {processedPayslips.filter(Boolean).map((slip) => {
+                const lateness = Number(slip.latenessDeduction) || 0;
+                const customSum = (slip.customDeductions || []).reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+                const totalDeductions = lateness + customSum;
+                const netPay = Math.max(0, (slip.totalGrossEarnings || 0) - totalDeductions);
 
-                  <div className="flex flex-wrap items-center gap-4 pl-4 md:pl-0">
-                    <div className="text-left md:text-right">
-                      <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Gross Pay</span>
-                      <span className="block text-xs font-extrabold text-slate-300">PHP {(slip.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                return (
+                  <div key={slip.id} className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 hover:border-emerald-500/20 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                        <span className="text-xs font-black text-white">Cutoff Period: {slip.payrollStart} to {slip.payrollEnd}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-semibold space-y-0.5 pl-4">
+                        <span className="block">Deductions Range: {slip.deductionsStart || "None"} to {slip.deductionsEnd || "None"}</span>
+                        <span className="block">Processed on: {slip.processedAt}</span>
+                      </div>
                     </div>
-                    <div className="text-left md:text-right">
-                      <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Deductions</span>
-                      <span className="block text-xs font-extrabold text-rose-400">PHP {(slip.totalDeductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+
+                    <div className="flex flex-wrap items-center gap-4 pl-4 md:pl-0">
+                      <div className="text-left md:text-right">
+                        <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Gross Pay</span>
+                        <span className="block text-xs font-extrabold text-slate-300">PHP {(slip.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="text-left md:text-right">
+                        <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Deductions</span>
+                        <span className="block text-xs font-extrabold text-rose-400">PHP {totalDeductions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="text-left md:text-right">
+                        <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Net Take-Home</span>
+                        <span className="block text-sm font-black text-emerald-400">PHP {netPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handlePrintHistoryPayslip(slip)}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black transition-all active:scale-95 shadow-md shadow-emerald-500/10 cursor-pointer shrink-0"
+                      >
+                        Print Payslip PDF
+                      </button>
                     </div>
-                    <div className="text-left md:text-right">
-                      <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Net Take-Home</span>
-                      <span className="block text-sm font-black text-emerald-400">PHP {(slip.netPay || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handlePrintHistoryPayslip(slip)}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black transition-all active:scale-95 shadow-md shadow-emerald-500/10 cursor-pointer shrink-0"
-                    >
-                      Print Payslip PDF
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
