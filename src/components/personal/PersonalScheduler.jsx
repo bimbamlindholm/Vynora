@@ -62,16 +62,14 @@ export default function PersonalScheduler({
       <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {calendarDays.map((day, idx) => {
           const isToday = day.dateStr === getLocalDateString(currentTime);
-          const hasLog = day.log;
-          const state = hasLog ? day.log.status : "empty";
           const hasDiary = day.dateStr && !!diaryNotes[day.dateStr];
 
           return (
             <div
               key={idx}
-              onClick={() => day.dateStr && (role === "employee" ? onOpenDiary(day.dateStr) : hasLog ? openEditRow(day.log) : onOpenDiary(day.dateStr))}
+              onClick={() => day.dateStr && onOpenDiary(day.dateStr)}
               className={`flex min-h-[58px] cursor-pointer flex-col justify-between rounded-xl border p-1.5 transition-all duration-300 sm:min-h-[90px] sm:rounded-2xl sm:p-2 ${
-                day.isCurrentMonth ? "bg-slate-900/20 border-white/5 hover:border-emerald-500/40 hover:bg-slate-900/40" : "bg-transparent border-transparent opacity-20 pointer-events-none"
+                day.isCurrentMonth ? "bg-slate-900/20 border-white/5 hover:border-purple-500/40 hover:bg-slate-900/40" : "bg-transparent border-transparent opacity-20 pointer-events-none"
               } ${isToday ? "border-emerald-500 bg-emerald-500/[0.02]" : ""}`}
             >
               <div className="flex justify-between items-start">
@@ -85,28 +83,17 @@ export default function PersonalScheduler({
                       title="Has Diary/Reminder Note" 
                     />
                   )}
-                  {hasLog && (
-                    <span className={`h-1.5 w-1.5 rounded-full ${
-                      day.log.workType === "regular_holiday" || day.log.workType === "special_holiday" ? "bg-orange-400" :
-                      day.log.workType === "rest_day" ? "bg-slate-400" :
-                      state === "Timed out" ? "bg-emerald-400" : "bg-yellow-400"
-                    }`} />
-                  )}
                 </div>
               </div>
 
-              {/* Daily summaries text inside grid cell */}
-              {hasLog ? (
-                <div className="hidden sm:block text-[9px] font-bold truncate text-slate-300">
-                  <div>{(day.log.workedMinutes / 60).toFixed(1)} hrs</div>
-                  {role && role !== "employee" && <div className="text-emerald-400">PHP {day.log.estimatedEarnings.toFixed(0)}</div>}
+              {/* Daily Notes / Reminders tag inside grid cell */}
+              {hasDiary && (
+                <div 
+                  className="hidden sm:block text-[8.5px] font-semibold truncate text-purple-300 italic max-w-full bg-purple-500/10 border border-purple-500/10 rounded-lg px-1.5 py-0.5 mt-2" 
+                  title={diaryNotes[day.dateStr]}
+                >
+                  "{diaryNotes[day.dateStr]}"
                 </div>
-              ) : (
-                hasDiary && (
-                  <div className="hidden sm:block text-[8px] font-bold truncate text-purple-300 italic max-w-[80px]" title={diaryNotes[day.dateStr]}>
-                    "{diaryNotes[day.dateStr]}"
-                  </div>
-                )
               )}
             </div>
           );
