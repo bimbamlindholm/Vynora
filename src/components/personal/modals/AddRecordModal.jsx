@@ -62,7 +62,7 @@ export default function AddRecordModal({
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
           <label className="grid gap-1 text-xs text-slate-400 font-bold">
             Select Date
             <input
