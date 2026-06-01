@@ -104,10 +104,53 @@ export function AuthProvider({ children }) {
       };
     }
 
-    // Mock a clean personal workspace structure to satisfy the frontend component interfaces
-    // without actually querying the missing workspaces/members tables in Supabase.
-    const mockPersonalWorkspace = {
-      id: "personal-ws",
+    // Fetch or create a real personal workspace in the workspaces table
+    let workspaceData = null;
+    try {
+      const { data: ws, error: wsErr } = await supabase
+        .from("workspaces")
+        .select("*")
+        .eq("owner_id", authUser.id)
+        .maybeSingle();
+
+      if (wsErr) throw wsErr;
+      workspaceData = ws;
+    } catch (err) {
+      console.error("[AuthContext] Error fetching workspace:", err);
+    }
+
+    if (!workspaceData && profileData) {
+      console.log("[AuthContext] Workspace missing for personal user. Auto-creating real row...");
+      try {
+        const defaultWorkspace = {
+          workspace_name: "Personal Workspace",
+          workspace_code: `PRSL-${Math.floor(10000 + Math.random() * 90000)}`,
+          owner_id: authUser.id,
+          default_hourly_rate: profileData.hourly_rate || 100,
+          default_daily_rate: profileData.daily_rate || 800,
+          shift_start_time: "09:00",
+          expected_work_hours: 8,
+          payroll_period: "monthly",
+          late_grace_minutes: 0,
+          overtime_rate: 1.25,
+          break_is_paid: false,
+        };
+
+        const { data: insertedWorkspace, error: insertWsError } = await supabase
+          .from("workspaces")
+          .insert(defaultWorkspace)
+          .select()
+          .maybeSingle();
+
+        if (insertWsError) throw insertWsError;
+        workspaceData = insertedWorkspace;
+      } catch (err) {
+        console.error("[AuthContext] Failed to auto-create personal workspace:", err);
+      }
+    }
+
+    const activeWorkspace = workspaceData || {
+      id: "personal-ws", // fallback
       workspace_name: "Personal Workspace",
       shift_start_time: "09:00",
       expected_work_hours: 8,
@@ -123,20 +166,20 @@ export function AuthProvider({ children }) {
       id: "personal-membership",
       role: "personal",
       status: "active",
-      workspace: mockPersonalWorkspace,
+      workspace: activeWorkspace,
     };
 
-    setWorkspace(mockPersonalWorkspace);
-    setWorkspaces([mockPersonalWorkspace]);
+    setWorkspace(activeWorkspace);
+    setWorkspaces([activeWorkspace]);
     setMembership(mockMembership);
     setPermissions(defaultPermissions);
 
     return {
       profile: profileData,
-      workspace: mockPersonalWorkspace,
+      workspace: activeWorkspace,
       membership: mockMembership,
       permissions: defaultPermissions,
-      workspaces: [mockPersonalWorkspace],
+      workspaces: [activeWorkspace],
     };
   };
 
