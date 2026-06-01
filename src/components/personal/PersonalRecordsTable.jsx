@@ -8,7 +8,21 @@ import {
   Edit2, 
   Trash2 
 } from "lucide-react";
-import { FilterBtn } from "./personalComponents";
+// Period Filters Button
+function FilterBtn({ label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition duration-300 border ${
+        active
+          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+          : "bg-transparent border-transparent text-slate-400 hover:text-white"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
 
 // Time formatter helper
 function formatTime12(timeStr) {

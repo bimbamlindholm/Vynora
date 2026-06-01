@@ -1,5 +1,22 @@
 import { Play, Pause, StopCircle, Lock } from "lucide-react";
-import { ClockButton } from "./personalComponents";
+
+// Clock Actions Buttons
+function ClockButton({ icon: Icon, label, color, active, onClick, disabled }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={!active || disabled}
+      className={`flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-center text-[11px] font-black transition-all duration-300 select-none active:scale-95 sm:gap-2 sm:p-3.5 sm:text-xs ${
+        active 
+          ? `${color} text-white border-transparent cursor-pointer shadow-[0_0_15px_rgba(0,0,0,0.1)]` 
+          : "bg-slate-950/20 border-white/5 text-slate-600 cursor-not-allowed opacity-40"
+      }`}
+    >
+      <Icon size={18} />
+      <span className="max-w-full truncate text-[9px] uppercase tracking-wide sm:text-[10px]">{label}</span>
+    </button>
+  );
+}
 
 export default function PersonalWelcomeCard({
   currentTime,

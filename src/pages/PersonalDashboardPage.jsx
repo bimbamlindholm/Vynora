@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect, no-unused-vars, react-hooks/exhaustive-deps, react-hooks/preserve-manual-memoization */
+/* eslint-disable react-hooks/set-state-in-effect, no-unused-vars, react-hooks/exhaustive-deps, react-hooks/preserve-manual-memoization, react-hooks/purity */
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -52,7 +52,16 @@ import PersonalRecordsTable from "../components/personal/PersonalRecordsTable";
 import PersonalPayrollCalculator from "../components/personal/PersonalPayrollCalculator";
 import PersonalScheduler from "../components/personal/PersonalScheduler";
 import PersonalProfileCard from "../components/personal/PersonalProfileCard";
-import { StatBlock } from "../components/personal/personalComponents";
+// Analytics Detailed Block
+function StatBlock({ title, val, desc }) {
+  return (
+    <div className="glass-panel rounded-2xl p-5 border-white/5 bg-slate-900/30">
+      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{title}</span>
+      <span className="mt-1 block break-words text-lg font-black tracking-tight text-white">{val}</span>
+      <span className="block text-[9px] text-slate-500 font-bold mt-0.5">{desc}</span>
+    </div>
+  );
+}
 
 // Extracted Modals
 import DeleteConfirmationModal from "../components/personal/modals/DeleteConfirmationModal";

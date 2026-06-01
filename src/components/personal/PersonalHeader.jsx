@@ -13,7 +13,22 @@ import {
   X,
   User,
 } from "lucide-react";
-import { NavItem } from "./personalComponents";
+// Navigation Item for Sidebar
+function NavItem({ icon: Icon, label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-xs font-black transition duration-300 ${
+        active
+          ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.05)]"
+          : "bg-transparent border border-transparent text-slate-400 hover:text-white hover:bg-white/[0.02]"
+      }`}
+    >
+      <Icon size={16} className="shrink-0" />
+      <span className="min-w-0 truncate">{label}</span>
+    </button>
+  );
+}
 
 const MAIN_MOBILE_TABS = [
   { key: "dashboard", label: "Home", icon: LayoutDashboard },

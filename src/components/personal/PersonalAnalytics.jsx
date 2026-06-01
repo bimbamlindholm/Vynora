@@ -1,5 +1,33 @@
 import { DollarSign, TrendingUp, Calendar, Target } from "lucide-react";
-import { StatCard, ProgressBar } from "./personalComponents";
+// Dashboard Stat Card Widget
+function StatCard({ icon: Icon, title, val, subtitle }) {
+  return (
+    <div className="glass-panel flex min-w-0 flex-col justify-between rounded-2xl border-white/5 bg-slate-900/30 p-4">
+      <div className="flex justify-between items-center">
+        <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wider text-slate-500">{title}</span>
+        <div className="h-6 w-6 rounded-lg bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-400">
+          <Icon size={12} />
+        </div>
+      </div>
+      <div className="mt-3">
+        <span className="block max-w-full truncate text-sm font-black tracking-tight text-white sm:text-base">{val}</span>
+        <span className="block text-[9px] text-slate-500 font-bold truncate mt-0.5">{subtitle}</span>
+      </div>
+    </div>
+  );
+}
+
+// Goals Progress Bar Indicator
+function ProgressBar({ percent, color }) {
+  return (
+    <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+      <div
+        className={`h-full rounded-full bg-gradient-to-r ${color} transition-all duration-500`}
+        style={{ width: `${percent}%` }}
+      />
+    </div>
+  );
+}
 
 export default function PersonalAnalytics({ analyticsSummary, goals, goalsProgress }) {
   return (
