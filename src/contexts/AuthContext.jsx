@@ -73,13 +73,12 @@ export function AuthProvider({ children }) {
       const { data: insertedData, error: insertError } = await supabase
         .from("profiles")
         .insert(defaultProfile)
-        .select()
-        .maybeSingle();
+        .select();
 
       if (insertError) {
         console.error("[AuthContext] Failed to auto-create missing profile:", insertError);
-      } else {
-        profileData = insertedData;
+      } else if (insertedData) {
+        profileData = Array.isArray(insertedData) ? insertedData[0] : insertedData;
       }
     }
 
@@ -110,11 +109,12 @@ export function AuthProvider({ children }) {
       const { data: ws, error: wsErr } = await supabase
         .from("workspaces")
         .select("*")
-        .eq("owner_id", authUser.id)
-        .maybeSingle();
+        .eq("owner_id", authUser.id);
 
       if (wsErr) throw wsErr;
-      workspaceData = ws;
+      if (ws && ws.length > 0) {
+        workspaceData = ws[0];
+      }
     } catch (err) {
       console.error("[AuthContext] Error fetching workspace:", err);
     }
@@ -139,11 +139,12 @@ export function AuthProvider({ children }) {
         const { data: insertedWorkspace, error: insertWsError } = await supabase
           .from("workspaces")
           .insert(defaultWorkspace)
-          .select()
-          .maybeSingle();
+          .select();
 
         if (insertWsError) throw insertWsError;
-        workspaceData = insertedWorkspace;
+        if (insertedWorkspace) {
+          workspaceData = Array.isArray(insertedWorkspace) ? insertedWorkspace[0] : insertedWorkspace;
+        }
       } catch (err) {
         console.error("[AuthContext] Failed to auto-create personal workspace:", err);
       }

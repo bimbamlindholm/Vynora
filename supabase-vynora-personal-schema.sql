@@ -222,25 +222,20 @@ CREATE TABLE public.audit_logs (
 );
 
 -- =========================================================================
--- ROW LEVEL SECURITY (RLS) & ACCESS CONTROL POLICIES
+-- ROW LEVEL SECURITY (RLS) & ACCESS CONTROL POLICIES (DISABLED FOR STANDALONE PERSONAL PRIVACY)
 -- =========================================================================
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.attendance_records ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.schedules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leave_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.attendance_correction_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payslips ENABLE ROW LEVEL SECURITY;
-
--- SECURITY POLICIES (Allows all authenticated actions for personal user privacy)
-CREATE POLICY "Allow users to view own profile" ON public.profiles FOR SELECT TO authenticated USING (id = auth.uid());
-CREATE POLICY "Allow users to insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (id = auth.uid());
-CREATE POLICY "Allow users to update own profile" ON public.profiles FOR UPDATE TO authenticated USING (id = auth.uid()) WITH CHECK (id = auth.uid());
-
-CREATE POLICY "Allow users to manage own attendance" ON public.attendance_records FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
-CREATE POLICY "Allow users to manage own schedules" ON public.schedules FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
-CREATE POLICY "Allow users to manage own leaves" ON public.leave_requests FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
-CREATE POLICY "Allow users to manage own corrections" ON public.attendance_correction_requests FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
-CREATE POLICY "Allow users to view own payslips" ON public.payslips FOR SELECT TO authenticated USING (user_id = auth.uid());
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workspaces DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workspace_members DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attendance_records DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.schedules DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employee_permissions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payroll_batches DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payslips DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.leave_requests DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attendance_correction_requests DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.field_errands DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs DISABLE ROW LEVEL SECURITY;
 
 -- AUTOMATED TRIGGER FOR NEW SIGN-UPS
 CREATE OR REPLACE FUNCTION public.handle_new_user()

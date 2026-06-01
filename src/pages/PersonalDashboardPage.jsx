@@ -1909,7 +1909,7 @@ function PersonalDashboardPage() {
       window.location.reload();
     } catch (err) {
       console.error(err);
-      addToast("Failed to save settings.", "error");
+      addToast("Failed to save settings: " + (err.message || err), "error");
     } finally {
       setSubmitting(false);
     }
@@ -2312,7 +2312,7 @@ function PersonalDashboardPage() {
       await fetchSchedules();
     } catch (err) {
       console.error("Error saving shift:", err);
-      addToast("Failed to save shift.", "error");
+      addToast("Failed to save shift: " + (err.message || err), "error");
     } finally {
       setSubmitting(false);
     }
