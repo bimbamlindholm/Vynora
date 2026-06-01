@@ -66,18 +66,15 @@ export default function VynoraNavbar() {
 
         {/* Right: Actions */}
         <div className="hidden items-center gap-2 xl:flex">
-          {loginTypes.map(({ icon: Icon, label, to }) => (
-            <Link
-              key={label}
-              to={to}
-              className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3.5 text-xs font-black text-slate-100 transition-all hover:border-cyan-300/45 hover:bg-cyan-300/10 hover:text-cyan-200 hover:scale-[1.02] active:scale-95"
-            >
-              <Icon size={14} className="text-cyan-300" />
-              {label}
-            </Link>
-          ))}
+          <Link
+            to="/login"
+            className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3.5 text-xs font-black text-slate-100 transition-all hover:border-cyan-300/45 hover:bg-cyan-300/10 hover:text-cyan-200 hover:scale-[1.02] active:scale-95"
+          >
+            <UserRound size={14} className="text-cyan-300" />
+            Log In
+          </Link>
           <Link 
-            to="/choose-account-type" 
+            to="/register" 
             className="glow-button rounded-xl px-5 py-3 text-xs font-black uppercase tracking-wider text-white inline-flex items-center gap-1.5 transition hover:scale-[1.02] active:scale-95"
           >
             <Sparkles size={13} />
@@ -121,21 +118,18 @@ export default function VynoraNavbar() {
             ))}
           </div>
           <div className="mt-4 grid gap-3 pt-4 border-t border-white/5">
-            <div className="grid gap-2 sm:grid-cols-2">
-              {loginTypes.map(({ icon: Icon, label, to }) => (
-                <Link
-                  key={label}
-                  to={to}
-                  onClick={() => setIsOpen(false)}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-center text-xs font-black text-white hover:bg-white/5"
-                >
-                  <Icon size={14} className="text-cyan-300" />
-                  {label}
-                </Link>
-              ))}
+            <div className="grid gap-2 sm:grid-cols-1">
+              <Link
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-center text-xs font-black text-white hover:bg-white/5"
+              >
+                <UserRound size={14} className="text-cyan-300" />
+                Log In
+              </Link>
             </div>
             <Link
-              to="/choose-account-type"
+              to="/register"
               onClick={() => setIsOpen(false)}
               className="glow-button rounded-xl px-4 py-3 text-center text-xs font-black uppercase tracking-wider text-white flex items-center justify-center gap-1.5"
             >

@@ -66,7 +66,7 @@ export default function LandingPage() {
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Link
-                  to="/choose-account-type"
+                  to="/register"
                   className="glow-button inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02] active:scale-95"
                 >
                   Get Started for Free
