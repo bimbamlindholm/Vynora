@@ -1,6 +1,6 @@
 -- =========================================================================
 -- VYNORA - STANDALONE PERSONAL DTR & PRODUCTIVITY PORTAL
--- DATABASE SETUP SCHEMA & POLICIES (UPDATED WITH SCHEDULES & WORKSPACE REF)
+-- DATABASE SETUP SCHEMA & POLICIES (CORRECTED EVENT-BASED SCHEMA)
 -- =========================================================================
 -- Run this full script in your Supabase SQL Editor (https://supabase.com)
 -- This sets up the minimal, clean schema needed strictly for the
@@ -22,19 +22,19 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. CREATE ATTENDANCE RECORDS TABLE (INDIVIDUAL DTR)
+-- 2. CREATE ATTENDANCE RECORDS TABLE (EVENT-BASED TRANSACTIONAL LOGS)
 CREATE TABLE IF NOT EXISTS public.attendance_records (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  clock_in TIMESTAMP WITH TIME ZONE,
-  clock_out TIMESTAMP WITH TIME ZONE,
-  total_hours NUMERIC,
-  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  workspace_id TEXT DEFAULT 'personal-ws',
+  action TEXT NOT NULL, -- 'time_in', 'time_out', 'break_in', 'break_out'
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- The exact time of the clock event
+  date DATE NOT NULL DEFAULT CURRENT_DATE, -- The day of the event
+  comment TEXT DEFAULT '',
   latitude NUMERIC(9,6) DEFAULT NULL,
   longitude NUMERIC(9,6) DEFAULT NULL,
   verification_photo TEXT DEFAULT '',
-  workspace_id TEXT DEFAULT 'personal-ws',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 3. CREATE SCHEDULES TABLE (INDIVIDUAL CALENDAR PRESENTS)
