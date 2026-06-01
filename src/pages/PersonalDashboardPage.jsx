@@ -113,14 +113,17 @@ function getLocalTime24(dateInput) {
   if (!dateInput) return "";
   const d = new Date(dateInput);
   if (isNaN(d.getTime())) return "";
-  const h = String(d.getHours()).padStart(2, "0");
-  const m = String(d.getMinutes()).padStart(2, "0");
-  return `${h}:${m}`;
+  const h = d.getHours();
+  const m = d.getMinutes();
+  if (h === 0 && m === 0) return ""; // Treat 00:00 midnight as empty/null
+  const hStr = String(h).padStart(2, "0");
+  const mStr = String(m).padStart(2, "0");
+  return `${hStr}:${mStr}`;
 }
 
 // Helper to convert local date and 24h time selection cleanly to a UTC ISO string
 function toUTCISO(dateStr, timeStr) {
-  if (!dateStr || !timeStr) return "";
+  if (!dateStr || !timeStr || timeStr === "00:00") return "";
   try {
     const [year, month, day] = dateStr.split("-").map(Number);
     const [hours, minutes] = timeStr.split(":").map(Number);
@@ -1039,9 +1042,13 @@ function PersonalDashboardPage() {
         breakOutStr = breaks.map(b => formatTimeOption(b.breakOut)).join(", ");
       }
 
-      // Metadata extracted from comments & custom schedules
+            // Metadata extracted from comments & custom schedules
       const dayShift = schedules.find(s => s.date === dateStr);
-      const dayBreakIsPaid = dayShift ? (dayShift.notes && dayShift.notes.includes("[PAID_BREAK]")) : false;
+      const dayBreakIsPaid = dayShift && dayShift.notes && dayShift.notes.includes("[PAID_BREAK]") 
+        ? true 
+        : (dayShift && dayShift.notes && dayShift.notes.includes("[UNPAID_BREAK]") 
+          ? false 
+          : !!settings.breakIsPaid);
       
       const anyComment = sortedEvents.map(e => e.comment).find(Boolean) || "";
       const cleanNotes = anyComment.replace(/\[REST_DAY\]|\[REG_HOLIDAY\]|\[SPL_HOLIDAY\]/g, "").trim();
@@ -1543,8 +1550,8 @@ function PersonalDashboardPage() {
       const tag = addForm.workType === "rest_day" ? "[REST_DAY]" : addForm.workType === "regular_holiday" ? "[REG_HOLIDAY]" : addForm.workType === "special_holiday" ? "[SPL_HOLIDAY]" : "";
       const fullComment = `${tag} ${addForm.notes}`.trim();
 
-      // Time In Event. Required, because this is the anchor that lets today's incomplete log resume on the dashboard.
-      if (addForm.timeIn) {
+            // Time In Event. Required, because this is the anchor that lets today's incomplete log resume on the dashboard.
+      if (addForm.timeIn && addForm.timeIn !== "00:00") {
         eventsToInsert.push({
           workspace_id: workspace.id,
           user_id: user.id,
@@ -1561,7 +1568,7 @@ function PersonalDashboardPage() {
       if (addForm.hasBreak) {
         const breakSessions = Array.isArray(addForm.breaks) ? addForm.breaks : [];
         breakSessions.forEach((session) => {
-          if (session.breakIn) {
+          if (session.breakIn && session.breakIn !== "00:00") {
             eventsToInsert.push({
               workspace_id: workspace.id,
               user_id: user.id,
@@ -1574,7 +1581,7 @@ function PersonalDashboardPage() {
             });
           }
 
-          if (session.breakOut) {
+          if (session.breakOut && session.breakOut !== "00:00") {
             eventsToInsert.push({
               workspace_id: workspace.id,
               user_id: user.id,
@@ -1590,7 +1597,7 @@ function PersonalDashboardPage() {
       }
 
       // Time Out Event is optional. If blank, the log stays incomplete and dashboard buttons can continue the session.
-      if (addForm.timeOut) {
+      if (addForm.timeOut && addForm.timeOut !== "00:00") {
         eventsToInsert.push({
           workspace_id: workspace.id,
           user_id: user.id,
@@ -1704,8 +1711,8 @@ function PersonalDashboardPage() {
       const tag = editForm.workType === "rest_day" ? "[REST_DAY]" : editForm.workType === "regular_holiday" ? "[REG_HOLIDAY]" : editForm.workType === "special_holiday" ? "[SPL_HOLIDAY]" : "";
       const fullComment = `${tag} ${editForm.notes}`.trim();
 
-      // Time In Event
-      if (editForm.timeIn) {
+            // Time In Event
+      if (editForm.timeIn && editForm.timeIn !== "00:00") {
         eventsToInsert.push({
           workspace_id: workspace.id,
           user_id: user.id,
@@ -1720,7 +1727,7 @@ function PersonalDashboardPage() {
 
       // Add Breaks
       editForm.breaks.forEach((b) => {
-        if (b.breakIn) {
+        if (b.breakIn && b.breakIn !== "00:00") {
           eventsToInsert.push({
             workspace_id: workspace.id,
             user_id: user.id,
@@ -1732,7 +1739,7 @@ function PersonalDashboardPage() {
             created_at: toUTCISO(baseDate, b.breakIn)
           });
         }
-        if (b.breakOut) {
+        if (b.breakOut && b.breakOut !== "00:00") {
           eventsToInsert.push({
             workspace_id: workspace.id,
             user_id: user.id,
@@ -1747,7 +1754,7 @@ function PersonalDashboardPage() {
       });
 
       // Time Out Event
-      if (editForm.timeOut) {
+      if (editForm.timeOut && editForm.timeOut !== "00:00") {
         eventsToInsert.push({
           workspace_id: workspace.id,
           user_id: user.id,
@@ -2952,6 +2959,26 @@ function PersonalDashboardPage() {
                           disabled={role === "employee"}
                           className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white disabled:opacity-50"
                         />
+                      </label>
+                    </div>
+
+                    <h3 className="text-sm font-extrabold text-white border-b border-white/5 pb-3 pt-3">Break Preferences</h3>
+
+                    <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                      <label className="flex items-start gap-3 cursor-pointer text-xs text-slate-400">
+                        <input
+                          type="checkbox"
+                          id="breakIsPaid"
+                          name="breakIsPaid"
+                          checked={!!settings.breakIsPaid}
+                          onChange={(e) => setSettings({ ...settings, breakIsPaid: e.target.checked })}
+                          disabled={role === "employee"}
+                          className="w-5 h-5 rounded bg-slate-950 border border-white/10 text-emerald-500 focus:ring-emerald-500 disabled:opacity-50 accent-emerald-500 cursor-pointer mt-0.5"
+                        />
+                        <div>
+                          <div className="text-sm font-bold text-white">Paid Breaks</div>
+                          <span className="text-[10px] text-slate-500 block leading-tight mt-0.5">If unchecked, break times will be deducted from your worked hours and estimated pay.</span>
+                        </div>
                       </label>
                     </div>
 
