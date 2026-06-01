@@ -90,6 +90,8 @@ function formatTime12(timeStr) {
     
     if (isNaN(h) || isNaN(m)) return timeStr;
     
+    if (h === 0 && m === 0) return "00:00"; // Treat midnight 00:00 as "00:00"
+    
     const ampm = h >= 12 ? "PM" : "AM";
     const displayH = h % 12 === 0 ? 12 : h % 12;
     const displayM = m < 10 ? `0${m}` : m;
@@ -136,7 +138,7 @@ function toUTCISO(dateStr, timeStr) {
 
 // Helper to determine if current time is before a scheduled shift end time (handles HH:MM 24h and AM/PM formats)
 function isBeforeEndTime(endTimeStr) {
-  if (!endTimeStr) return false;
+  if (!endTimeStr || endTimeStr === "00:00") return false;
   try {
     const now = new Date();
     let hours = 0;
@@ -3426,8 +3428,8 @@ function PersonalDashboardPage() {
 
                                   setScheduleForm({
                                     id: dayShift?.id || null,
-                                    shiftStart: dayShift?.shift_start || settings.shiftStartTime || "09:00",
-                                    shiftEnd: dayShift?.shift_end || "18:00",
+                                    shiftStart: dayShift && dayShift.shift_start !== undefined ? dayShift.shift_start : (settings.shiftStartTime || "09:00"),
+                                    shiftEnd: dayShift && dayShift.shift_end !== undefined ? dayShift.shift_end : "18:00",
                                     label: dayShift?.label || "Day Shift",
                                     color: dayShift?.color || "#10b981",
                                     notes: cleanNotesVal,

@@ -41,27 +41,25 @@ export default function EditShiftModal({
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1 text-xs text-slate-400 font-bold">
-              Shift Start Time
+              Shift Start Time <span className="font-normal text-slate-500">(optional)</span>
               <input
                 type="time"
                 id="shiftStart"
                 name="shiftStart"
                 value={scheduleForm.shiftStart}
-                onChange={(e) => setScheduleForm({ ...scheduleForm, shiftStart: e.target.value })}
-                required
+                onChange={(e) => setScheduleForm({ ...scheduleForm, shiftStart: e.target.value || "" })}
                 className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-emerald-500/50"
               />
             </label>
 
             <label className="grid gap-1 text-xs text-slate-400 font-bold">
-              Shift End Time
+              Shift End Time <span className="font-normal text-slate-500">(optional)</span>
               <input
                 type="time"
                 id="shiftEnd"
                 name="shiftEnd"
                 value={scheduleForm.shiftEnd}
-                onChange={(e) => setScheduleForm({ ...scheduleForm, shiftEnd: e.target.value })}
-                required
+                onChange={(e) => setScheduleForm({ ...scheduleForm, shiftEnd: e.target.value || "" })}
                 className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-emerald-500/50"
               />
             </label>
