@@ -2964,26 +2964,6 @@ function PersonalDashboardPage() {
                       </label>
                     </div>
 
-                    <h3 className="text-sm font-extrabold text-white border-b border-white/5 pb-3 pt-3">Break Preferences</h3>
-
-                    <div className="grid gap-4 sm:grid-cols-2 pt-2">
-                      <label className="flex items-start gap-3 cursor-pointer text-xs text-slate-400">
-                        <input
-                          type="checkbox"
-                          id="breakIsPaid"
-                          name="breakIsPaid"
-                          checked={!!settings.breakIsPaid}
-                          onChange={(e) => setSettings({ ...settings, breakIsPaid: e.target.checked })}
-                          disabled={role === "employee"}
-                          className="w-5 h-5 rounded bg-slate-950 border border-white/10 text-emerald-500 focus:ring-emerald-500 disabled:opacity-50 accent-emerald-500 cursor-pointer mt-0.5"
-                        />
-                        <div>
-                          <div className="text-sm font-bold text-white">Paid Breaks</div>
-                          <span className="text-[10px] text-slate-500 block leading-tight mt-0.5">If unchecked, break times will be deducted from your worked hours and estimated pay.</span>
-                        </div>
-                      </label>
-                    </div>
-
                     <h3 className="text-sm font-extrabold text-white border-b border-white/5 pb-3 pt-3">Multipliers & Premium Rates</h3>
 
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
