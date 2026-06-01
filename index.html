@@ -7,6 +7,44 @@
     <meta name="theme-color" content="#07111F" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vynora | Track Time. Empower People. Elevate Growth.</title>
+    <script>
+      window.addEventListener('error', function(event) {
+        var errDiv = document.getElementById('error-overlay') || document.createElement('div');
+        errDiv.id = 'error-overlay';
+        errDiv.style.position = 'fixed';
+        errDiv.style.inset = '0';
+        errDiv.style.background = '#0f172a';
+        errDiv.style.color = '#f43f5e';
+        errDiv.style.padding = '40px';
+        errDiv.style.fontFamily = 'Consolas, monospace';
+        errDiv.style.fontSize = '14px';
+        errDiv.style.lineHeight = '1.6';
+        errDiv.style.zIndex = '999999';
+        errDiv.style.overflow = 'auto';
+        errDiv.innerHTML = '<h1 style="font-size:24px;margin-bottom:10px;color:#f43f5e;">⚠️ Runtime Error Detected</h1>' +
+          '<p style="font-size:16px;color:#94a3b8;font-weight:bold;">' + event.message + '</p>' +
+          '<pre style="background:#020617;padding:20px;border-radius:8px;border:1px solid #e2e8f01a;color:#cbd5e1;overflow-x:auto;">' + (event.error ? event.error.stack : 'No stack trace available') + '</pre>';
+        document.body.appendChild(errDiv);
+      });
+      window.addEventListener('unhandledrejection', function(event) {
+        var errDiv = document.getElementById('error-overlay') || document.createElement('div');
+        errDiv.id = 'error-overlay';
+        errDiv.style.position = 'fixed';
+        errDiv.style.inset = '0';
+        errDiv.style.background = '#0f172a';
+        errDiv.style.color = '#f43f5e';
+        errDiv.style.padding = '40px';
+        errDiv.style.fontFamily = 'Consolas, monospace';
+        errDiv.style.fontSize = '14px';
+        errDiv.style.lineHeight = '1.6';
+        errDiv.style.zIndex = '999999';
+        errDiv.style.overflow = 'auto';
+        errDiv.innerHTML = '<h1 style="font-size:24px;margin-bottom:10px;color:#f43f5e;">⚠️ Unhandled Rejection Detected</h1>' +
+          '<p style="font-size:16px;color:#94a3b8;font-weight:bold;">' + event.reason + '</p>' +
+          '<pre style="background:#020617;padding:20px;border-radius:8px;border:1px solid #e2e8f01a;color:#cbd5e1;overflow-x:auto;">' + (event.reason && event.reason.stack ? event.reason.stack : 'No stack trace available') + '</pre>';
+        document.body.appendChild(errDiv);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
