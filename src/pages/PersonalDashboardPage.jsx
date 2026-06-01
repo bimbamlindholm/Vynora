@@ -1416,7 +1416,7 @@ function PersonalDashboardPage() {
       const todayShift = schedules.find((s) => s.date === todayKey);
       if (todayShift && isBeforeEndTime(todayShift.shift_end)) {
         addToast(
-          `Hindi pa pwedeng mag-Time Out dahil hindi pa natatapos ang iyong shift schedule na hanggang ${formatTime12(todayShift.shift_end)}.`,
+          `You cannot Time Out yet because your scheduled shift has not ended (Ends at ${formatTime12(todayShift.shift_end)}).`,
           "warning"
         );
         return;
