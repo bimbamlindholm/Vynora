@@ -1,6 +1,6 @@
 -- =========================================================================
 -- VYNORA - STANDALONE PERSONAL DTR & PRODUCTIVITY PORTAL
--- DATABASE SETUP SCHEMA & POLICIES
+-- DATABASE SETUP SCHEMA & POLICIES (UPDATED WITH SCHEDULES & WORKSPACE REF)
 -- =========================================================================
 -- Run this full script in your Supabase SQL Editor (https://supabase.com)
 -- This sets up the minimal, clean schema needed strictly for the
@@ -33,14 +33,31 @@ CREATE TABLE IF NOT EXISTS public.attendance_records (
   latitude NUMERIC(9,6) DEFAULT NULL,
   longitude NUMERIC(9,6) DEFAULT NULL,
   verification_photo TEXT DEFAULT '',
+  workspace_id TEXT DEFAULT 'personal-ws',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. ENABLE ROW LEVEL SECURITY (RLS)
+-- 3. CREATE SCHEDULES TABLE (INDIVIDUAL CALENDAR PRESENTS)
+CREATE TABLE IF NOT EXISTS public.schedules (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  workspace_id TEXT DEFAULT 'personal-ws',
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  date DATE NOT NULL,
+  shift_start TEXT DEFAULT '09:00',
+  shift_end TEXT DEFAULT '18:00',
+  label TEXT DEFAULT 'Day Shift',
+  color TEXT DEFAULT '#06b6d4',
+  notes TEXT DEFAULT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE (user_id, date)
+);
+
+-- 4. ENABLE ROW LEVEL SECURITY (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attendance_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.schedules ENABLE ROW LEVEL SECURITY;
 
--- 4. CREATE SECURITY POLICIES FOR PROFILES
+-- 5. CREATE SECURITY POLICIES FOR PROFILES
 DROP POLICY IF EXISTS "Allow users to view own profile" ON public.profiles;
 CREATE POLICY "Allow users to view own profile" ON public.profiles
   FOR SELECT TO authenticated
@@ -57,15 +74,21 @@ CREATE POLICY "Allow users to update own profile" ON public.profiles
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
 
--- 5. CREATE SECURITY POLICIES FOR ATTENDANCE RECORDS (INDIVIDUAL DTR)
+-- 6. CREATE SECURITY POLICIES FOR ATTENDANCE RECORDS (INDIVIDUAL DTR)
 DROP POLICY IF EXISTS "Allow users to manage own attendance" ON public.attendance_records;
 CREATE POLICY "Allow users to manage own attendance" ON public.attendance_records
   FOR ALL TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
--- 6. AUTOMATED TRIGGER FOR SIGN-UPS (Google, Facebook, Email, etc.)
--- This automatically initializes a profile in the public schema when a new user registers.
+-- 7. CREATE SECURITY POLICIES FOR SCHEDULES
+DROP POLICY IF EXISTS "Allow users to manage own schedules" ON public.schedules;
+CREATE POLICY "Allow users to manage own schedules" ON public.schedules
+  FOR ALL TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+-- 8. AUTOMATED TRIGGER FOR SIGN-UPS (Google, Facebook, Email, etc.)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -93,3 +116,4 @@ CREATE TRIGGER on_auth_user_created
 -- Grant permissions to public roles
 GRANT ALL ON public.profiles TO authenticated, anon;
 GRANT ALL ON public.attendance_records TO authenticated, anon;
+GRANT ALL ON public.schedules TO authenticated, anon;
