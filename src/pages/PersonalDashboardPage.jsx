@@ -739,6 +739,77 @@ function PersonalDashboardPage() {
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [showShiftModal, setShowShiftModal] = useState(false);
+
+  // Onboarding Wizard States & Pre-fill Handler
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(1);
+  const [onboardingForm, setOnboardingForm] = useState({
+    fullName: "",
+    age: "",
+    address: "",
+    phone: "",
+    avatar: "🚀", // Default avatar preset (can also hold base64 image string)
+    discoverySource: "",
+    purpose: "",
+    employmentStatus: "",
+  });
+
+  useEffect(() => {
+    if (profile && profile.id) {
+      const onboarded = localStorage.getItem(`trackly_onboarded_${profile.id}`);
+      if (!onboarded) {
+        setShowOnboarding(true);
+        setOnboardingForm(current => ({
+          ...current,
+          fullName: current.fullName || profile.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "",
+          phone: current.phone || profile.phone || "",
+          address: current.address || profile.address || "",
+        }));
+      }
+    }
+  }, [profile, user]);
+
+  const handleAvatarFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setOnboardingForm(current => ({
+        ...current,
+        avatar: reader.result // Base64 representation
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCompleteOnboarding = async () => {
+    try {
+      setSubmitting(true);
+      await updateProfile({
+        ...profile,
+        full_name: onboardingForm.fullName,
+        phone: onboardingForm.phone,
+        address: `Address: ${onboardingForm.address} | Age: ${onboardingForm.age} | Purpose: ${onboardingForm.purpose}`,
+        face_photo: onboardingForm.avatar, // Save their avatar choice as their profile photo!
+      });
+      await refreshSessionData();
+
+      // Save the onboarded flags
+      localStorage.setItem(`trackly_onboarded_${profile.id}`, "true");
+      localStorage.setItem(`trackly_discovery_${profile.id}`, onboardingForm.discoverySource);
+      localStorage.setItem(`trackly_purpose_${profile.id}`, onboardingForm.purpose);
+      localStorage.setItem(`trackly_employment_${profile.id}`, onboardingForm.employmentStatus);
+      localStorage.setItem(`trackly_age_${profile.id}`, onboardingForm.age);
+
+      addToast("Setup complete! Welcome to Vynora.", "success");
+      setShowOnboarding(false);
+    } catch (err) {
+      console.error("Failed to complete onboarding:", err);
+      addToast("Failed to complete onboarding. Please try again.", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
   const [showPresetModal, setShowPresetModal] = useState(false);
   const [selectedScheduleDate, setSelectedScheduleDate] = useState("");
   const [scheduleForm, setScheduleForm] = useState({
@@ -2940,6 +3011,376 @@ function PersonalDashboardPage() {
     };
   }, [todayRow, schedules, currentTime]);
 
+  const renderOnboardingModal = () => {
+    return (
+      <div className="fixed inset-0 bg-[#030712]/90 backdrop-blur-2xl z-[99999] flex items-center justify-center p-4 overflow-y-auto">
+        <div className="galaxy-bg opacity-30" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-[120px]" />
+
+        <div className="relative w-full max-w-xl rounded-[2.5rem] border border-white/10 bg-[#07111F]/70 p-6 sm:p-10 backdrop-blur-md shadow-2xl flex flex-col gap-6 text-center max-h-[90dvh] overflow-y-auto">
+          
+          {/* Header Progress Steps */}
+          <div className="flex items-center justify-between gap-2 max-w-xs mx-auto w-full mb-2">
+            {[1, 2, 3, 4].map((step) => (
+              <div key={step} className="flex-1 flex items-center">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${
+                  onboardingStep === step 
+                    ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-110'
+                    : onboardingStep > step 
+                    ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
+                    : 'bg-white/5 border border-white/10 text-slate-500'
+                }`}>
+                  {onboardingStep > step ? "✓" : step}
+                </div>
+                {step < 4 && (
+                  <div className={`flex-1 h-[2px] mx-1 transition-all ${
+                    onboardingStep > step ? 'bg-emerald-500/40' : 'bg-white/5'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* STEP 1: WELCOME SCREEN */}
+          {onboardingStep === 1 && (
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/10 text-[10px] font-black tracking-widest text-cyan-400 uppercase">
+                <Sparkles size={11} className="animate-pulse" />
+                Launch Trackly
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+                Welcome to Vynora, <br/>
+                <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
+                  {onboardingForm.fullName.split(" ")[0] || "User"}!
+                </span>
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
+                Time is your most valuable asset. Let's customize your premium standalone workspace so you can track time, automate payslips, and optimize your productivity.
+              </p>
+              
+              <div className="border border-white/5 bg-slate-900/20 p-5 rounded-2xl text-left space-y-3">
+                <h4 className="text-xs font-black text-white uppercase tracking-wider">🌟 What to expect:</h4>
+                <ul className="text-xs text-slate-400 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold">✔</span>
+                    <span><strong>100% Free Standalone Payroll:</strong> No subscriptions required, fully private database.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold">✔</span>
+                    <span><strong>Premium Corporate PDF Exports:</strong> Print audit-ready vouchers, slips, and DTR logs.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold">✔</span>
+                    <span><strong>Biometric GPS clocking:</strong> Optional high-trust selfie verification for work sessions.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setOnboardingStep(2)}
+                className="w-full h-14 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-sm font-black text-white rounded-xl shadow-lg shadow-cyan-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer mt-4"
+              >
+                Let's Get Started 🚀
+              </button>
+            </div>
+          )}
+
+          {/* STEP 2: PROFILE PICTURE & BASIC INFO */}
+          {onboardingStep === 2 && (
+            <div className="space-y-5 text-left">
+              <div className="text-center space-y-2">
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Complete Your Profile</h3>
+                <p className="text-xs text-slate-400">Let's set up your profile identity for report sheets and printed payslips.</p>
+              </div>
+
+              {/* Avatar Selector */}
+              <div className="space-y-2">
+                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Select Profile Avatar</span>
+                <div className="flex flex-wrap items-center justify-center gap-4 py-2 bg-slate-950/20 rounded-2xl border border-white/5 p-4">
+                  {["🚀", "👑", "🎨", "⚡"].map(av => (
+                    <button
+                      key={av}
+                      type="button"
+                      onClick={() => setOnboardingForm(current => ({ ...current, avatar: av }))}
+                      className={`h-14 w-14 rounded-2xl text-2xl flex items-center justify-center border transition-all active:scale-90 ${
+                        onboardingForm.avatar === av
+                          ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)] scale-105'
+                          : 'bg-white/5 border-white/5 hover:border-white/10'
+                      }`}
+                    >
+                      {av}
+                    </button>
+                  ))}
+                  
+                  {/* Custom image option */}
+                  <label className={`h-14 px-3 rounded-2xl text-[10px] font-black uppercase flex flex-col items-center justify-center border cursor-pointer transition-all active:scale-95 leading-none gap-1 ${
+                    onboardingForm.avatar.startsWith("data:image")
+                      ? 'bg-emerald-500/20 border-emerald-400 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                      : 'bg-white/5 border-white/5 hover:border-white/10 text-slate-400'
+                  }`}>
+                    {onboardingForm.avatar.startsWith("data:image") ? "📷 Custom Loaded" : "📷 Upload Photo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Full Name */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                  Full Name
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">👤</span>
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={onboardingForm.fullName}
+                      onChange={(e) => setOnboardingForm(current => ({ ...current, fullName: e.target.value }))}
+                      className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
+                      required
+                    />
+                  </div>
+                </label>
+
+                {/* Age */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Age
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📅</span>
+                    <input
+                      type="number"
+                      placeholder="e.g. 25"
+                      value={onboardingForm.age}
+                      onChange={(e) => setOnboardingForm(current => ({ ...current, age: e.target.value }))}
+                      className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
+                      required
+                    />
+                  </div>
+                </label>
+
+                {/* Phone */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Phone Number
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📞</span>
+                    <input
+                      type="tel"
+                      placeholder="e.g. +639123456789"
+                      value={onboardingForm.phone}
+                      onChange={(e) => setOnboardingForm(current => ({ ...current, phone: e.target.value }))}
+                      className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
+                    />
+                  </div>
+                </label>
+
+                {/* Address */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                  Address
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📍</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. Manila, Philippines"
+                      value={onboardingForm.address}
+                      onChange={(e) => setOnboardingForm(current => ({ ...current, address: e.target.value }))}
+                      className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
+                      required
+                    />
+                  </div>
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingStep(1)}
+                  className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  ◀ Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!onboardingForm.fullName.trim()) {
+                      addToast("Please enter your name.", "warning");
+                      return;
+                    }
+                    if (!onboardingForm.age.trim()) {
+                      addToast("Please enter your age.", "warning");
+                      return;
+                    }
+                    if (!onboardingForm.address.trim()) {
+                      addToast("Please enter your address.", "warning");
+                      return;
+                    }
+                    setOnboardingStep(3);
+                  }}
+                  className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10"
+                >
+                  Continue ▶
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: SURVEY QUESTIONS */}
+          {onboardingStep === 3 && (
+            <div className="space-y-5 text-left">
+              <div className="text-center space-y-2">
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Onboarding Survey</h3>
+                <p className="text-xs text-slate-400">Help us customize Vynora to fit your exact work style and purpose.</p>
+              </div>
+
+              <div className="grid gap-4">
+                {/* Discovery Source */}
+                <label className="grid gap-2 text-xs text-slate-400 font-bold">
+                  🔍 Where did you discover Trackly/Vynora?
+                  <select
+                    value={onboardingForm.discoverySource}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, discoverySource: e.target.value }))}
+                    className="h-12 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500"
+                    required
+                  >
+                    <option value="">Select an option</option>
+                    <option value="Google Search">Google Search</option>
+                    <option value="Friend/Colleague">Friend / Colleague</option>
+                    <option value="Social Media">Social Media (FB, Twitter, LinkedIn)</option>
+                    <option value="YouTube / Video Review">YouTube / Video Review</option>
+                    <option value="Github / Open Source Search">Github / Open Source Search</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+
+                {/* Purpose */}
+                <label className="grid gap-2 text-xs text-slate-400 font-bold">
+                  🎯 What is your main purpose on using Trackly?
+                  <select
+                    value={onboardingForm.purpose}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, purpose: e.target.value }))}
+                    className="h-12 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500"
+                    required
+                  >
+                    <option value="">Select an option</option>
+                    <option value="Track personal working hours">Track personal working / freelance hours</option>
+                    <option value="Calculate and manage my payroll">Calculate and manage my payroll/vouchers</option>
+                    <option value="Manage dynamic schedules and shifts">Manage dynamic schedules and shifts</option>
+                    <option value="Increase focus and work productivity">Increase focus and work productivity</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+
+                {/* Professional Status */}
+                <label className="grid gap-2 text-xs text-slate-400 font-bold">
+                  👔 What is your current professional status?
+                  <select
+                    value={onboardingForm.employmentStatus}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, employmentStatus: e.target.value }))}
+                    className="h-12 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500"
+                    required
+                  >
+                    <option value="">Select an option</option>
+                    <option value="Freelancer / Independent Professional">Freelancer / Independent Professional</option>
+                    <option value="Employee / Worker">Employee / Salaried Worker</option>
+                    <option value="Business Owner / Workspace Admin">Business Owner / Workspace Admin</option>
+                    <option value="Student">Student / Scholar</option>
+                    <option value="Other">Other / Self-employed</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingStep(2)}
+                  className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  ◀ Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!onboardingForm.discoverySource) {
+                      addToast("Please answer how you discovered us.", "warning");
+                      return;
+                    }
+                    if (!onboardingForm.purpose) {
+                      addToast("Please select your main purpose.", "warning");
+                      return;
+                    }
+                    if (!onboardingForm.employmentStatus) {
+                      addToast("Please select your professional status.", "warning");
+                      return;
+                    }
+                    setOnboardingStep(4);
+                  }}
+                  className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10"
+                >
+                  Continue ▶
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: READY TO LAUNCH */}
+          {onboardingStep === 4 && (
+            <div className="space-y-6">
+              <div className="mx-auto h-20 w-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-4xl shadow-xl shadow-emerald-500/5">
+                🎉
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">You're All Set!</h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
+                  Your premium corporate profile has been fully configured. Vynora is now customized for your specific work needs.
+                </p>
+              </div>
+
+              <div className="bg-slate-900/20 border border-white/5 rounded-2xl p-4 text-left text-xs text-slate-400 space-y-2 divide-y divide-white/5">
+                <div className="pb-2 flex justify-between items-center">
+                  <span className="font-bold">👤 Profile Avatar</span>
+                  <span className="text-white font-mono">{onboardingForm.avatar.length > 2 ? "📷 Custom Photo" : onboardingForm.avatar}</span>
+                </div>
+                <div className="py-2 flex justify-between items-center">
+                  <span className="font-bold">👔 Name / Age</span>
+                  <span className="text-white font-semibold">{onboardingForm.fullName} ({onboardingForm.age} yrs)</span>
+                </div>
+                <div className="py-2 flex justify-between items-center">
+                  <span className="font-bold">🎯 Primary Focus</span>
+                  <span className="text-white font-semibold italic text-right max-w-[200px] truncate">{onboardingForm.purpose}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => setOnboardingStep(3)}
+                  className="h-14 w-20 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center"
+                >
+                  ◀ Back
+                </button>
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={handleCompleteOnboarding}
+                  className="flex-1 h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-sm font-black text-white rounded-xl shadow-lg shadow-emerald-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {submitting ? "Launching..." : "Launch My Workspace 🚀"}
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    );
+  };
+
   if (loading && rawRecords.length === 0) {
     return <SkeletonLoader />;
   }
@@ -4435,6 +4876,8 @@ function PersonalDashboardPage() {
             onClose={() => setSelectedPayslip(null)}
           />
         )}
+
+        {showOnboarding && renderOnboardingModal()}
 
         <HelpSystem role="personal" />
       </main>
