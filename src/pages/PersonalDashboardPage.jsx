@@ -346,6 +346,10 @@ function PersonalDashboardPage() {
     targetHours: 160,
   });
 
+  // Payroll Records & Payslip Builder States
+  const [payrollStart, setPayrollStart] = useState("");
+  const [payrollEnd, setPayrollEnd] = useState("");
+
   // Deductions Date Range & Applied State
   const [deductionsStart, setDeductionsStart] = useState("");
   const [deductionsEnd, setDeductionsEnd] = useState("");
@@ -736,9 +740,7 @@ function PersonalDashboardPage() {
     label: "Day Shift",
   });
 
-  // Payroll Records & Payslip Builder States
-  const [payrollStart, setPayrollStart] = useState("");
-  const [payrollEnd, setPayrollEnd] = useState("");
+  // Payroll Deductions State
   const [payrollDeductions, setPayrollDeductions] = useState([
     { id: "ded_1", name: "SSS Loan", amount: "" },
     { id: "ded_2", name: "Cash Advance", amount: "" }
