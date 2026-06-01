@@ -93,6 +93,8 @@ CREATE TABLE public.attendance_records (
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   workspace_id TEXT DEFAULT 'personal-ws',
   action TEXT NOT NULL, -- 'time_in', 'time_out', 'break_in', 'break_out'
+  status TEXT DEFAULT 'Working',
+  overtime_approved BOOLEAN DEFAULT FALSE,
   timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   date DATE NOT NULL DEFAULT CURRENT_DATE,
   comment TEXT DEFAULT '',
