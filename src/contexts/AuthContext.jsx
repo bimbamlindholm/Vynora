@@ -198,6 +198,9 @@ export function AuthProvider({ children }) {
         if (error) throw error;
         if (data.session?.user) await hydrateUser(data.session.user);
         else clearAuthState();
+      } catch (err) {
+        console.error("[AuthContext] Failed to initialize session:", err);
+        clearAuthState();
       } finally {
         if (active) setLoading(false);
       }
