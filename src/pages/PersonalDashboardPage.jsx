@@ -131,6 +131,45 @@ function toUTCISO(dateStr, timeStr) {
   }
 }
 
+// Helper to determine if current time is before a scheduled shift end time (handles HH:MM 24h and AM/PM formats)
+function isBeforeEndTime(endTimeStr) {
+  if (!endTimeStr) return false;
+  try {
+    const now = new Date();
+    let hours = 0;
+    let minutes = 0;
+    
+    const cleanStr = endTimeStr.trim().toLowerCase();
+    const isPm = cleanStr.includes("pm");
+    const isAm = cleanStr.includes("am");
+    
+    const digitsOnly = cleanStr.replace(/am|pm/g, "").trim();
+    const timeParts = digitsOnly.split(":");
+    
+    if (timeParts.length >= 2) {
+      hours = parseInt(timeParts[0], 10);
+      minutes = parseInt(timeParts[1], 10);
+      
+      if (isPm && hours < 12) {
+        hours += 12;
+      } else if (isAm && hours === 12) {
+        hours = 0;
+      }
+    } else {
+      hours = parseInt(digitsOnly, 10);
+      if (isNaN(hours)) return false;
+    }
+    
+    if (isNaN(hours) || isNaN(minutes)) return false;
+    
+    const shiftEndToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+    return now.getTime() < shiftEndToday.getTime();
+  } catch (e) {
+    console.error("Failed to parse shift end time:", e);
+    return false;
+  }
+}
+
 
 const PERSONAL_TABS = new Set([
   "dashboard",
@@ -1371,6 +1410,19 @@ function PersonalDashboardPage() {
       return;
     }
 
+    // New business logic check: Block early Time Out if it's before scheduled shift end time!
+    if (actionType === "time_out") {
+      const todayKey = getLocalDateString(new Date());
+      const todayShift = schedules.find((s) => s.date === todayKey);
+      if (todayShift && isBeforeEndTime(todayShift.shift_end)) {
+        addToast(
+          `Hindi pa pwedeng mag-Time Out dahil hindi pa natatapos ang iyong shift schedule na hanggang ${formatTime12(todayShift.shift_end)}.`,
+          "warning"
+        );
+        return;
+      }
+    }
+
     // Intercept with Face Verification if active for employees
     if (role === "employee" && permissions?.faceVerification && (actionType === "time_in" || actionType === "time_out")) {
       const facePhoto = profile?.face_photo || localStorage.getItem(`trackly_local_face_photo_${profile.id}`) || "";
@@ -2516,13 +2568,22 @@ function PersonalDashboardPage() {
     const isClockedIn = todayRow && todayRow.timeIn && !todayRow.timeOut;
     const isOnBreak = todayRow?.status === "On break";
 
+    // 1. Find today's shift schedule
+    const todayKey = getLocalDateString(currentTime);
+    const todayShift = schedules.find((s) => s.date === todayKey);
+    
+    // 2. Check if today's shift is not finished yet
+    const shiftNotFinished = todayShift && isBeforeEndTime(todayShift.shift_end);
+
     return {
       canTimeIn: !isClockedIn && (!todayRow || !todayRow.timeOut),
       canBreakIn: isClockedIn && !isOnBreak,
       canBreakOut: isClockedIn && isOnBreak,
-      canTimeOut: isClockedIn,
+      canTimeOut: isClockedIn, // Let it be clickable so early click triggers the helpful toast warning!
+      shiftNotFinished: !!shiftNotFinished,
+      todayShiftEnd: todayShift?.shift_end || null,
     };
-  }, [todayRow]);
+  }, [todayRow, schedules, currentTime]);
 
   if (loading && rawRecords.length === 0) {
     return <SkeletonLoader />;

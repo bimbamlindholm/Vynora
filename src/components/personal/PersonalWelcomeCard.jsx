@@ -1,4 +1,4 @@
-import { Play, Pause, StopCircle } from "lucide-react";
+import { Play, Pause, StopCircle, Lock } from "lucide-react";
 import { ClockButton } from "./personalComponents";
 
 export default function PersonalWelcomeCard({
@@ -80,9 +80,9 @@ export default function PersonalWelcomeCard({
           disabled={submitting}
         />
         <ClockButton
-          icon={StopCircle}
-          label="Time Out"
-          color="bg-rose-500 hover:bg-rose-400"
+          icon={dtrButtonsConfig?.shiftNotFinished ? Lock : StopCircle}
+          label={dtrButtonsConfig?.shiftNotFinished ? "Locked" : "Time Out"}
+          color={dtrButtonsConfig?.shiftNotFinished ? "bg-slate-700/60 hover:bg-slate-600/60 border-slate-700/40 text-slate-400" : "bg-rose-500 hover:bg-rose-400"}
           active={dtrButtonsConfig.canTimeOut}
           onClick={() => onClockAction("time_out")}
           disabled={submitting}
