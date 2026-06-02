@@ -3511,6 +3511,18 @@ function PersonalDashboardPage() {
   }, [todayRow, schedules, currentTime]);
 
   const renderOnboardingModal = () => {
+    const calculateAge = (bday) => {
+      if (!bday) return "";
+      const birthDate = new Date(bday);
+      const today = new Date();
+      let computedAge = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        computedAge--;
+      }
+      return computedAge >= 0 ? computedAge : "";
+    };
+
     const computedOnboardingAge = calculateAge(onboardingForm.birthday);
 
     // Toggle preferred day checkbox helper for onboarding
