@@ -89,14 +89,19 @@ export default function PersonalHeader({
 
   return (
     <>
-      {/* --- DESKTOP SIDEBAR --- */}
       <aside className="z-20 hidden w-64 shrink-0 flex-col border-r border-white/5 bg-slate-900/40 backdrop-blur-xl md:flex">
-        <div className="mb-4 flex items-center justify-center border-b border-white/5 bg-slate-950/20 px-4 pb-6 pt-8">
+        <div className="mb-4 flex items-center gap-3 border-b border-white/5 bg-slate-950/20 px-5 pb-6 pt-8">
           <img
-            src="/logo-01.png"
+            src="/vynora-logo.png"
             alt="Vynora Logo"
-            className="h-auto max-h-[96px] w-full object-contain"
+            className="h-11 w-11 shrink-0 object-contain drop-shadow-[0_0_18px_rgba(16,185,129,0.38)] animate-pulse"
           />
+          <div className="leading-none">
+            <span className="block text-xl font-black tracking-wide text-white">VYNORA</span>
+            <span className="block text-[0.55rem] font-bold uppercase tracking-[0.25em] text-emerald-400 mt-0.5">
+              Personal Portal
+            </span>
+          </div>
         </div>
 
         <nav className="flex-1 space-y-1 px-4 py-2">
@@ -148,7 +153,19 @@ export default function PersonalHeader({
 
       {/* --- MOBILE TOP BAR --- */}
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-slate-950/70 px-4 py-3 backdrop-blur-xl md:hidden">
-        <img src="/logo-01.png" alt="Vynora Logo" className="h-12 w-auto object-contain" />
+        <div className="flex items-center gap-2">
+          <img
+            src="/vynora-logo.png"
+            alt="Vynora Logo"
+            className="h-9 w-9 shrink-0 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-pulse"
+          />
+          <div className="leading-none">
+            <span className="block text-base font-black tracking-wide text-white">VYNORA</span>
+            <span className="block text-[0.5rem] font-bold uppercase tracking-[0.15em] text-emerald-400 mt-0.5">
+              Personal Portal
+            </span>
+          </div>
+        </div>
 
         <button
           type="button"

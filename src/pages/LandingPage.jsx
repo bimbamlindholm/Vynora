@@ -5,7 +5,7 @@ import VynoraNavbar from "../components/vynora/VynoraNavbar";
 import VynoraFooter from "../components/vynora/VynoraFooter";
 import PageTransition from "../components/PageTransition";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { Sparkles, Shield, Clock, BarChart3, CloudLightning, ArrowRight } from "lucide-react";
+import { Sparkles, Shield, Clock, BarChart3, CloudLightning, ArrowRight, Download } from "lucide-react";
 
 export default function LandingPage() {
   const { user, role, loading } = useAuth();
@@ -72,13 +72,18 @@ export default function LandingPage() {
                   Get Started for Free
                   <ArrowRight size={13} />
                 </Link>
-                <Link
-                  to="/features"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] hover:border-cyan-300/30 hover:bg-cyan-300/5 hover:text-cyan-200 px-6 text-xs font-black uppercase tracking-wider text-slate-200 transition hover:scale-[1.02] active:scale-95"
+                <a
+                  href="/vynora.apk"
+                  download="Vynora.apk"
+                  className="inline-flex h-12 items-center justify-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:border-emerald-400/60 hover:bg-emerald-400/20 hover:text-emerald-200 px-6 text-xs font-black uppercase tracking-wider text-emerald-300 transition hover:scale-[1.02] active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.15)] cursor-pointer"
                 >
-                  Learn More
-                </Link>
+                  <Download size={14} className="text-emerald-400" />
+                  Download Vynora App (.APK)
+                </a>
               </div>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none pt-1">
+                🤖 Native Android App: <span className="text-emerald-400 font-extrabold">12.8 MB</span> • Build v1.0.4 • Off-store direct side-load installer
+              </p>
             </div>
 
             {/* Right Column: Visual Dashboard Mockup & Mobile Overlay */}
