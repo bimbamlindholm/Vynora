@@ -594,13 +594,14 @@ export function AuthProvider({ children }) {
     const client = requireSupabase();
     if (!user) throw new Error("You must be logged in to update your profile.");
 
+    const hasCustomColumns = profile && ('birthday' in profile);
+
     const payload = {
       full_name: values.fullName ?? values.full_name ?? profile?.full_name,
       email: values.email ?? profile?.email,
-      phone: values.phone ?? "",
-      address: values.address ?? "",
-      department: values.department ?? "",
-      position: values.position ?? "",
+      phone: values.phone ?? profile?.phone ?? "",
+      department: values.department ?? profile?.department ?? "",
+      position: values.position ?? profile?.position ?? "",
       employee_id: values.employeeId ?? values.employee_id ?? profile?.employee_id ?? "",
       sss: values.sss ?? profile?.sss ?? "",
       philhealth: values.philhealth ?? profile?.philhealth ?? "",
@@ -608,6 +609,44 @@ export function AuthProvider({ children }) {
       tin: values.tin ?? profile?.tin ?? "",
       face_photo: values.face_photo ?? values.facePhoto ?? profile?.face_photo ?? "",
     };
+
+    if (hasCustomColumns) {
+      payload.address = values.address ?? profile?.address ?? "";
+      payload.birthday = values.birthday ?? profile?.birthday ?? null;
+      payload.gender = values.gender ?? profile?.gender ?? "";
+      payload.street_address = values.streetAddress ?? values.street_address ?? profile?.street_address ?? "";
+      payload.city = values.city ?? profile?.city ?? "";
+      payload.province = values.province ?? profile?.province ?? "";
+      payload.country = values.country ?? profile?.country ?? "";
+      payload.profession_category = values.professionCategory ?? values.profession_category ?? profile?.profession_category ?? "";
+      payload.employment_type = values.employmentType ?? values.employment_type ?? profile?.employment_type ?? "";
+      payload.work_arrangement = values.workArrangement ?? values.work_arrangement ?? profile?.work_arrangement ?? "";
+      payload.career_goal = values.careerGoal ?? values.career_goal ?? profile?.career_goal ?? "";
+      payload.skill_focus = values.skillFocus ?? values.skill_focus ?? profile?.skill_focus ?? "";
+      payload.experience_level = values.experienceLevel ?? values.experience_level ?? profile?.experience_level ?? "";
+      payload.preferred_working_days = values.preferredWorkingDays ?? values.preferred_working_days ?? profile?.preferred_working_days ?? [];
+      payload.weekly_productivity_goal = values.weeklyProductivityGoal ?? values.weekly_productivity_goal ?? profile?.weekly_productivity_goal ?? 40;
+      payload.company_name = values.companyName ?? values.company_name ?? profile?.company_name ?? "";
+    } else {
+      const serializedData = {
+        streetAddress: values.streetAddress ?? values.street_address ?? "",
+        city: values.city ?? "",
+        province: values.province ?? "",
+        country: values.country ?? "Philippines",
+        birthday: values.birthday ?? "",
+        gender: values.gender ?? "",
+        professionCategory: values.professionCategory ?? values.profession_category ?? "",
+        employmentType: values.employmentType ?? values.employment_type ?? "",
+        workArrangement: values.workArrangement ?? values.work_arrangement ?? "",
+        careerGoal: values.careerGoal ?? values.career_goal ?? "",
+        skillFocus: values.skillFocus ?? values.skill_focus ?? "",
+        experienceLevel: values.experienceLevel ?? values.experience_level ?? "",
+        preferredWorkingDays: values.preferredWorkingDays ?? values.preferred_working_days ?? [],
+        weeklyProductivityGoal: values.weeklyProductivityGoal ?? values.weekly_productivity_goal ?? 40,
+        companyName: values.companyName ?? values.company_name ?? "",
+      };
+      payload.address = JSON.stringify(serializedData);
+    }
 
     const { data, error } = await client
       .from("profiles")

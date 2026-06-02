@@ -386,9 +386,125 @@ function PersonalDashboardPage() {
     pagibig: "",
     tin: "",
     facePhoto: "",
+    // New premium fields
+    birthday: "",
+    gender: "",
+    streetAddress: "",
+    city: "",
+    province: "",
+    country: "Philippines",
+    professionCategory: "",
+    employmentType: "",
+    workArrangement: "",
+    careerGoal: "",
+    skillFocus: "",
+    experienceLevel: "",
+    preferredWorkingDays: [1, 2, 3, 4, 5],
+    weeklyProductivityGoal: 40,
+    companyName: "",
   });
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [localFacePhoto, setLocalFacePhoto] = useState("");
+
+  // States for manual password updates
+  const [manualPassword, setManualPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  // Helper to parse composite address (e.g. Address: blk 1 ... | Age: 24 | Purpose: ...) or JSON
+  const parseCompositeAddress = (profileData) => {
+    const defaultData = {
+      address: "",
+      streetAddress: "",
+      city: "",
+      province: "",
+      country: "Philippines",
+      birthday: "",
+      gender: "",
+      professionCategory: "",
+      employmentType: "",
+      workArrangement: "",
+      careerGoal: "",
+      skillFocus: "",
+      experienceLevel: "",
+      preferredWorkingDays: [1, 2, 3, 4, 5],
+      weeklyProductivityGoal: 40,
+      companyName: "",
+    };
+
+    if (!profileData) return defaultData;
+
+    // Case 1: If direct database columns are present, use them!
+    const hasCustomColumns = ('birthday' in profileData);
+    if (hasCustomColumns) {
+      return {
+        address: profileData.address || "",
+        streetAddress: profileData.street_address || "",
+        city: profileData.city || "",
+        province: profileData.province || "",
+        country: profileData.country || "Philippines",
+        birthday: profileData.birthday || "",
+        gender: profileData.gender || "",
+        professionCategory: profileData.profession_category || "",
+        employmentType: profileData.employment_type || "",
+        workArrangement: profileData.work_arrangement || "",
+        careerGoal: profileData.career_goal || "",
+        skillFocus: profileData.skill_focus || "",
+        experienceLevel: profileData.experience_level || "",
+        preferredWorkingDays: Array.isArray(profileData.preferred_working_days) ? profileData.preferred_working_days : [1, 2, 3, 4, 5],
+        weeklyProductivityGoal: profileData.weekly_productivity_goal || 40,
+        companyName: profileData.company_name || "",
+      };
+    }
+
+    // Case 2: Fallback to reading from the 'address' column
+    const addrString = profileData.address || "";
+    if (addrString.startsWith("{")) {
+      try {
+        const data = JSON.parse(addrString);
+        return {
+          ...defaultData,
+          ...data,
+          address: data.streetAddress ? `${data.streetAddress}, ${data.city || ""}`.replace(/,\s*$/, "") : "",
+        };
+      } catch (e) {
+        console.error("Failed to parse serialized address JSON:", e);
+      }
+    }
+
+    // Case 3: Legacy format: Address: blk 1 ... | Age: 24 | Purpose: ...
+    const addressMatch = addrString.match(/^Address:\s*(.*?)(?:\s*\|\s*Age:\s*(.*?))?(?:\s*\|\s*Purpose:\s*(.*?))?$/i);
+    if (addressMatch) {
+      const cleanAddress = addressMatch[1] || "";
+      const age = addressMatch[2] || "";
+      const purpose = addressMatch[3] || "";
+      
+      // Attempt to split street address, city, etc. from legacy address
+      const parts = cleanAddress.split(/,\s*/);
+      return {
+        ...defaultData,
+        address: cleanAddress,
+        streetAddress: parts[0] || cleanAddress,
+        city: parts[1] || "",
+        province: parts[2] || "",
+        careerGoal: purpose ? `Purpose: ${purpose}` : "",
+      };
+    }
+
+    // Case 4: Pure string address fallback
+    let clean = addrString;
+    if (clean.startsWith("Address:")) {
+      clean = clean.replace(/^Address:\s*/i, "");
+    }
+    const parts = clean.split(/,\s*/);
+    return {
+      ...defaultData,
+      address: clean,
+      streetAddress: parts[0] || clean,
+      city: parts[1] || "",
+      province: parts[2] || "",
+    };
+  };
 
   // Load heavy facial biometric photo reference asynchronously from local IndexedDB mobile storage
   useEffect(() => {
@@ -404,10 +520,11 @@ function PersonalDashboardPage() {
   // Hydrate profile form when profile details are available
   useEffect(() => {
     if (profile) {
+      const parsed = parseCompositeAddress(profile);
       setProfileForm({
         fullName: profile.full_name || "",
         phone: profile.phone || "",
-        address: profile.address || "",
+        address: parsed.address,
         position: profile.position || "",
         department: profile.department || "",
         employeeId: profile.employee_id || "",
@@ -416,6 +533,22 @@ function PersonalDashboardPage() {
         pagibig: profile.pagibig || "",
         tin: profile.tin || "",
         facePhoto: profile.face_photo || "",
+        // Premium fields
+        birthday: parsed.birthday,
+        gender: parsed.gender,
+        streetAddress: parsed.streetAddress,
+        city: parsed.city,
+        province: parsed.province,
+        country: parsed.country,
+        professionCategory: parsed.professionCategory,
+        employmentType: parsed.employmentType,
+        workArrangement: parsed.workArrangement,
+        careerGoal: parsed.careerGoal,
+        skillFocus: parsed.skillFocus,
+        experienceLevel: parsed.experienceLevel,
+        preferredWorkingDays: parsed.preferredWorkingDays,
+        weeklyProductivityGoal: parsed.weeklyProductivityGoal,
+        companyName: parsed.companyName,
       });
     }
   }, [profile]);
@@ -891,15 +1024,16 @@ function PersonalDashboardPage() {
           }
         }
         
+        const parsed = parseCompositeAddress(profile.address);
         setOnboardingForm(current => ({
           ...current,
           fullName: parsedForm.fullName || current.fullName || profile.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "",
-          age: parsedForm.age || current.age || "",
-          address: parsedForm.address || current.address || profile.address || "",
+          age: parsedForm.age || current.age || parsed.age || "",
+          address: parsedForm.address || current.address || parsed.address,
           phone: parsedForm.phone || current.phone || profile.phone || "",
           avatar: parsedForm.avatar || current.avatar || "🚀",
           discoverySource: parsedForm.discoverySource || current.discoverySource || "",
-          purpose: parsedForm.purpose || current.purpose || "",
+          purpose: parsedForm.purpose || current.purpose || parsed.purpose || "",
           employmentStatus: parsedForm.employmentStatus || current.employmentStatus || "",
         }));
       }
@@ -2948,10 +3082,15 @@ function PersonalDashboardPage() {
 
     setUpdatingProfile(true);
     try {
+      // Create a clean display address to store
+      const cleanAddress = profileForm.streetAddress 
+        ? `${profileForm.streetAddress}, ${profileForm.city || ""}`.replace(/,\s*$/, "") 
+        : profileForm.address;
+
       await updateProfile({
         fullName: profileForm.fullName,
         phone: profileForm.phone,
-        address: profileForm.address,
+        address: cleanAddress,
         position: profileForm.position,
         department: profileForm.department,
         employeeId: profileForm.employeeId,
@@ -2960,6 +3099,22 @@ function PersonalDashboardPage() {
         pagibig: profileForm.pagibig,
         tin: profileForm.tin,
         facePhoto: profileForm.facePhoto,
+        // Premium Fields
+        birthday: profileForm.birthday,
+        gender: profileForm.gender,
+        streetAddress: profileForm.streetAddress,
+        city: profileForm.city,
+        province: profileForm.province,
+        country: profileForm.country,
+        professionCategory: profileForm.professionCategory,
+        employmentType: profileForm.employmentType,
+        workArrangement: profileForm.workArrangement,
+        careerGoal: profileForm.careerGoal,
+        skillFocus: profileForm.skillFocus,
+        experienceLevel: profileForm.experienceLevel,
+        preferredWorkingDays: profileForm.preferredWorkingDays,
+        weeklyProductivityGoal: profileForm.weeklyProductivityGoal,
+        companyName: profileForm.companyName,
       });
       addToast("Profile information updated successfully!", "success");
     } catch (err) {
@@ -2967,6 +3122,39 @@ function PersonalDashboardPage() {
       addToast(err.message || "Failed to update profile.", "error");
     } finally {
       setUpdatingProfile(false);
+    }
+  };
+
+  // Set or update manual login password
+  const handleUpdatePassword = async (e) => {
+    if (e) e.preventDefault();
+    if (!manualPassword) {
+      addToast("Password cannot be empty.", "warning");
+      return;
+    }
+    if (manualPassword.length < 6) {
+      addToast("Password must be at least 6 characters.", "warning");
+      return;
+    }
+    if (manualPassword !== confirmPassword) {
+      addToast("Passwords do not match.", "warning");
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: manualPassword,
+      });
+      if (error) throw error;
+      addToast("Manual login password updated successfully! You can now log in using your email and password.", "success");
+      setManualPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      console.error("Error updating password:", err);
+      addToast(err.message || "Failed to update password.", "error");
+    } finally {
+      setUpdatingPassword(false);
     }
   };
 
@@ -4353,6 +4541,53 @@ function PersonalDashboardPage() {
                         </form>
                       </div>
                     )}
+                  </div>
+
+                  {/* SECURITY & MANUAL LOGIN SECTION */}
+                  <div className="glass-panel rounded-3xl p-6 sm:p-8 border-white/5 bg-slate-900/30 space-y-6">
+                    <div>
+                      <h3 className="text-sm font-extrabold text-white border-b border-white/5 pb-3">Security & Manual Login</h3>
+                      <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                        Setting a password enables you to log in manually using your email address (<strong>{profile?.email || user?.email}</strong>) and password in the future, even if you originally registered using Google OAuth.
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleUpdatePassword} className="space-y-4">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <label className="grid gap-1.5 text-xs text-slate-400">
+                          New Manual Password
+                          <input
+                            type="password"
+                            placeholder="Enter password (min 6 characters)"
+                            value={manualPassword}
+                            onChange={(e) => setManualPassword(e.target.value)}
+                            className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white focus:border-emerald-500 outline-none"
+                            required
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs text-slate-400">
+                          Confirm Password
+                          <input
+                            type="password"
+                            placeholder="Re-type your password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="h-10 px-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white focus:border-emerald-500 outline-none"
+                            required
+                          />
+                        </label>
+                      </div>
+
+                      <div className="pt-2">
+                        <button
+                          type="submit"
+                          disabled={updatingPassword || !manualPassword || !confirmPassword}
+                          className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-400 px-6 py-2.5 text-xs font-black text-white transition active:scale-95 disabled:opacity-50 sm:w-auto cursor-pointer"
+                        >
+                          {updatingPassword ? "Setting Password..." : "Set/Update Manual Password"}
+                        </button>
+                      </div>
+                    </form>
                   </div>
 
                   {/* Danger zone / clear data card */}
