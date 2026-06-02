@@ -985,28 +985,64 @@ function PersonalDashboardPage() {
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [onboardingForm, setOnboardingForm] = useState({
     fullName: "",
-    age: "",
-    address: "",
     phone: "",
-    avatar: "🚀", // Default avatar preset (can also hold base64 image string)
+    birthday: "",
+    gender: "",
+    streetAddress: "",
+    city: "",
+    province: "",
+    country: "Philippines",
+    avatar: "🚀",
+    position: "",
+    professionCategory: "",
+    employmentType: "",
+    companyName: "",
+    department: "",
+    employeeId: "",
+    workArrangement: "",
+    careerGoal: "",
+    skillFocus: "",
+    experienceLevel: "",
+    preferredWorkingDays: [1, 2, 3, 4, 5],
+    weeklyProductivityGoal: 40,
     discoverySource: "",
     purpose: "",
-    employmentStatus: "",
   });
 
   // Restore onboarding step & form once profile loads
   useEffect(() => {
     if (profile && profile.id) {
+      const parsed = parseCompositeAddress(profile);
+      
+      // Strict Check for Account Completeness:
+      // If a user just created an account or is an existing user but hasn't completed these premium profile fields,
+      // we MUST force them to fill it up.
+      const isProfileIncomplete = 
+        !profile.full_name || 
+        profile.full_name.trim() === "" ||
+        profile.full_name.trim().toLowerCase() === "user" || 
+        !parsed.birthday || 
+        !parsed.gender || 
+        !parsed.streetAddress || 
+        !parsed.city || 
+        !parsed.province || 
+        !profile.position || 
+        profile.position.trim() === "" ||
+        !parsed.professionCategory || 
+        !parsed.employmentType || 
+        !parsed.workArrangement;
+
       const onboarded = safeLocalStorage.getItem(`vynora_onboarded_${profile.id}`);
-      if (!onboarded) {
-        VynoraDeveloperLogger.log("Onboarding", "New user detected! Initializing profile setup wizard dialog.", { profileId: profile.id });
+
+      if (!onboarded || isProfileIncomplete) {
+        VynoraDeveloperLogger.log("Onboarding", "Incomplete profile detected! Initializing profile setup wizard dialog.", { profileId: profile.id, isProfileIncomplete });
         setShowOnboarding(true);
         
         // 1. Restore step
         const savedStep = safeLocalStorage.getItem(`vynora_onboarding_step_${profile.id}`);
         if (savedStep) {
           const stepNum = parseInt(savedStep, 10);
-          if (stepNum >= 1 && stepNum <= 4) {
+          if (stepNum >= 1 && stepNum <= 5) {
             setOnboardingStep(stepNum);
             VynoraDeveloperLogger.log("Onboarding", `Restored setup wizard to Step ${stepNum} from storage cache.`);
           }
@@ -1024,18 +1060,34 @@ function PersonalDashboardPage() {
           }
         }
         
-        const parsed = parseCompositeAddress(profile.address);
         setOnboardingForm(current => ({
           ...current,
           fullName: parsedForm.fullName || current.fullName || profile.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "",
-          age: parsedForm.age || current.age || parsed.age || "",
-          address: parsedForm.address || current.address || parsed.address,
           phone: parsedForm.phone || current.phone || profile.phone || "",
-          avatar: parsedForm.avatar || current.avatar || "🚀",
+          birthday: parsedForm.birthday || current.birthday || parsed.birthday || "",
+          gender: parsedForm.gender || current.gender || parsed.gender || "",
+          streetAddress: parsedForm.streetAddress || current.streetAddress || parsed.streetAddress || "",
+          city: parsedForm.city || current.city || parsed.city || "",
+          province: parsedForm.province || current.province || parsed.province || "",
+          country: parsedForm.country || current.country || parsed.country || "Philippines",
+          avatar: parsedForm.avatar || current.avatar || profile.face_photo || "🚀",
+          position: parsedForm.position || current.position || profile.position || "",
+          professionCategory: parsedForm.professionCategory || current.professionCategory || parsed.professionCategory || "",
+          employmentType: parsedForm.employmentType || current.employmentType || parsed.employmentType || "",
+          companyName: parsedForm.companyName || current.companyName || parsed.companyName || "",
+          department: parsedForm.department || current.department || profile.department || "",
+          employeeId: parsedForm.employeeId || current.employeeId || profile.employee_id || "",
+          workArrangement: parsedForm.workArrangement || current.workArrangement || parsed.workArrangement || "",
+          careerGoal: parsedForm.careerGoal || current.careerGoal || parsed.careerGoal || "",
+          skillFocus: parsedForm.skillFocus || current.skillFocus || parsed.skillFocus || "",
+          experienceLevel: parsedForm.experienceLevel || current.experienceLevel || parsed.experienceLevel || "",
+          preferredWorkingDays: parsedForm.preferredWorkingDays || current.preferredWorkingDays || parsed.preferredWorkingDays || [1, 2, 3, 4, 5],
+          weeklyProductivityGoal: parsedForm.weeklyProductivityGoal != null ? parsedForm.weeklyProductivityGoal : (parsed.weeklyProductivityGoal || 40),
           discoverySource: parsedForm.discoverySource || current.discoverySource || "",
           purpose: parsedForm.purpose || current.purpose || parsed.purpose || "",
-          employmentStatus: parsedForm.employmentStatus || current.employmentStatus || "",
         }));
+      } else {
+        setShowOnboarding(false);
       }
     }
   }, [profile, user]);
@@ -1071,21 +1123,43 @@ function PersonalDashboardPage() {
     try {
       setSubmitting(true);
       VynoraDeveloperLogger.log("Onboarding", "Submitting profile updates to Supabase...", onboardingForm);
+
+      const cleanAddress = onboardingForm.streetAddress 
+        ? `${onboardingForm.streetAddress}, ${onboardingForm.city || ""}`.replace(/,\s*$/, "") 
+        : "";
+
       await updateProfile({
-        ...profile,
-        full_name: onboardingForm.fullName,
+        fullName: onboardingForm.fullName,
         phone: onboardingForm.phone,
-        address: `Address: ${onboardingForm.address} | Age: ${onboardingForm.age} | Purpose: ${onboardingForm.purpose}`,
-        face_photo: onboardingForm.avatar, // Save their avatar choice as their profile photo!
+        address: cleanAddress,
+        facePhoto: onboardingForm.avatar,
+        position: onboardingForm.position,
+        department: onboardingForm.department,
+        employeeId: onboardingForm.employeeId,
+        // Premium Fields
+        birthday: onboardingForm.birthday,
+        gender: onboardingForm.gender,
+        streetAddress: onboardingForm.streetAddress,
+        city: onboardingForm.city,
+        province: onboardingForm.province,
+        country: onboardingForm.country,
+        professionCategory: onboardingForm.professionCategory,
+        employmentType: onboardingForm.employmentType,
+        workArrangement: onboardingForm.workArrangement,
+        careerGoal: onboardingForm.careerGoal,
+        skillFocus: onboardingForm.skillFocus,
+        experienceLevel: onboardingForm.experienceLevel,
+        preferredWorkingDays: onboardingForm.preferredWorkingDays,
+        weeklyProductivityGoal: onboardingForm.weeklyProductivityGoal,
+        companyName: onboardingForm.companyName,
       });
+
       await refreshSessionData();
 
       // Save the onboarded flags
       safeLocalStorage.setItem(`vynora_onboarded_${profile.id}`, "true");
       safeLocalStorage.setItem(`vynora_discovery_${profile.id}`, onboardingForm.discoverySource);
       safeLocalStorage.setItem(`vynora_purpose_${profile.id}`, onboardingForm.purpose);
-      safeLocalStorage.setItem(`vynora_employment_${profile.id}`, onboardingForm.employmentStatus);
-      safeLocalStorage.setItem(`vynora_age_${profile.id}`, onboardingForm.age);
 
       // Clean up onboarding temporary states
       safeLocalStorage.removeItem(`vynora_onboarding_step_${profile.id}`);
@@ -3437,19 +3511,43 @@ function PersonalDashboardPage() {
   }, [todayRow, schedules, currentTime]);
 
   const renderOnboardingModal = () => {
+    const computedOnboardingAge = calculateAge(onboardingForm.birthday);
+
+    // Toggle preferred day checkbox helper for onboarding
+    const handleOnboardingDayCheckboxChange = (dayNum) => {
+      const days = [...(onboardingForm.preferredWorkingDays || [])];
+      if (days.includes(dayNum)) {
+        const updated = days.filter((d) => d !== dayNum);
+        setOnboardingForm((prev) => ({ ...prev, preferredWorkingDays: updated }));
+      } else {
+        const updated = [...days, dayNum].sort();
+        setOnboardingForm((prev) => ({ ...prev, preferredWorkingDays: updated }));
+      }
+    };
+
+    const daysOfWeek = [
+      { label: "Mon", value: 1 },
+      { label: "Tue", value: 2 },
+      { label: "Wed", value: 3 },
+      { label: "Thu", value: 4 },
+      { label: "Fri", value: 5 },
+      { label: "Sat", value: 6 },
+      { label: "Sun", value: 0 },
+    ];
+
     return (
       <div className="fixed inset-0 bg-[#030712]/90 backdrop-blur-2xl z-[99999] flex items-center justify-center p-4 overflow-y-auto">
         <div className="galaxy-bg opacity-30" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-[120px]" />
 
-        <div className="relative w-full max-w-xl rounded-[2.5rem] border border-white/10 bg-[#07111F]/70 p-6 sm:p-10 backdrop-blur-md shadow-2xl flex flex-col gap-6 text-center max-h-[90dvh] overflow-y-auto">
+        <div className="relative w-full max-w-xl rounded-[2.5rem] border border-white/10 bg-[#07111F]/70 p-6 sm:p-10 backdrop-blur-md shadow-2xl flex flex-col gap-6 text-center max-h-[95dvh] overflow-y-auto">
           
           {/* Header Progress Steps */}
           <div className="flex items-center justify-between gap-2 max-w-xs mx-auto w-full mb-2">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5].map((step) => (
               <div key={step} className="flex-1 flex items-center">
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${
+                <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
                   onboardingStep === step 
                     ? 'bg-gradient-to-r from-cyan-400 to-indigo-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-110'
                     : onboardingStep > step 
@@ -3458,8 +3556,8 @@ function PersonalDashboardPage() {
                 }`}>
                   {onboardingStep > step ? "✓" : step}
                 </div>
-                {step < 4 && (
-                  <div className={`flex-1 h-[2px] mx-1 transition-all ${
+                {step < 5 && (
+                  <div className={`flex-1 h-[2px] mx-0.5 transition-all ${
                     onboardingStep > step ? 'bg-emerald-500/40' : 'bg-white/5'
                   }`} />
                 )}
@@ -3492,25 +3590,46 @@ function PersonalDashboardPage() {
                 </span>
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
-                Time is your most valuable asset. Let's customize your premium standalone workspace so you can track time, automate payslips, and optimize your productivity.
+                Let's set up your premium standalone professional account. Please complete your profile information to unlock the full Vynora dashboard.
               </p>
-              
-              <div className="border border-white/5 bg-slate-900/20 p-5 rounded-2xl text-left space-y-3">
-                <h4 className="text-xs font-black text-white uppercase tracking-wider">🌟 What to expect:</h4>
-                <ul className="text-xs text-slate-400 space-y-2">
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-400 font-bold">✔</span>
-                    <span><strong>100% Free Standalone Payroll:</strong> No subscriptions required, fully private database.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-400 font-bold">✔</span>
-                    <span><strong>Premium Corporate PDF Exports:</strong> Print audit-ready vouchers, slips, and DTR logs.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-400 font-bold">✔</span>
-                    <span><strong>Biometric GPS clocking:</strong> Optional high-trust selfie verification for work sessions.</span>
-                  </li>
-                </ul>
+
+              {/* Avatar Selector */}
+              <div className="space-y-2 border border-white/5 bg-slate-900/10 p-4 rounded-2xl">
+                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider text-left">Choose Profile Avatar</span>
+                <div className="flex flex-wrap items-center justify-center gap-3 py-2">
+                  {["🚀", "👑", "🎨", "⚡"].map(av => (
+                    <button
+                      key={av}
+                      type="button"
+                      onClick={() => {
+                        setOnboardingError("");
+                        setOnboardingForm(current => ({ ...current, avatar: av }));
+                      }}
+                      className={`h-12 w-12 rounded-xl text-xl flex items-center justify-center border transition-all active:scale-90 ${
+                        onboardingForm.avatar === av
+                          ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)] scale-105'
+                          : 'bg-white/5 border-white/5 hover:border-white/10'
+                      }`}
+                    >
+                      {av}
+                    </button>
+                  ))}
+                  
+                  {/* Custom image option */}
+                  <label className={`h-12 px-3 rounded-xl text-[9px] font-black uppercase flex flex-col items-center justify-center border cursor-pointer transition-all active:scale-95 leading-none gap-1 ${
+                    onboardingForm.avatar.startsWith("data:image")
+                      ? 'bg-emerald-500/20 border-emerald-400 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                      : 'bg-white/5 border-white/5 hover:border-white/10 text-slate-400'
+                  }`}>
+                    {onboardingForm.avatar.startsWith("data:image") ? "📷 Uploaded" : "📷 Upload"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
 
               <button
@@ -3526,202 +3645,126 @@ function PersonalDashboardPage() {
             </div>
           )}
 
-          {/* STEP 2: PROFILE PICTURE & BASIC INFO */}
+          {/* STEP 2: PERSONAL IDENTITY DETAILS */}
           {onboardingStep === 2 && (
-            <div className="space-y-5 text-left">
+            <div className="space-y-5 text-left animate-fade-in">
               <div className="text-center space-y-2">
-                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Complete Your Profile</h3>
-                <p className="text-xs text-slate-400">Let's set up your profile identity for report sheets and printed payslips.</p>
-              </div>
-
-              {/* Avatar Selector */}
-              <div className="space-y-2">
-                <span className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Select Profile Avatar</span>
-                <div className="flex flex-wrap items-center justify-center gap-4 py-2 bg-slate-950/20 rounded-2xl border border-white/5 p-4">
-                  {["🚀", "👑", "🎨", "⚡"].map(av => (
-                    <button
-                      key={av}
-                      type="button"
-                      onClick={() => {
-                        setOnboardingError("");
-                        setOnboardingForm(current => ({ ...current, avatar: av }));
-                      }}
-                      className={`h-14 w-14 rounded-2xl text-2xl flex items-center justify-center border transition-all active:scale-90 ${
-                        onboardingForm.avatar === av
-                          ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)] scale-105'
-                          : 'bg-white/5 border-white/5 hover:border-white/10'
-                      }`}
-                    >
-                      {av}
-                    </button>
-                  ))}
-                  
-                  {/* Custom image option */}
-                  <label className={`h-14 px-3 rounded-2xl text-[10px] font-black uppercase flex flex-col items-center justify-center border cursor-pointer transition-all active:scale-95 leading-none gap-1 ${
-                    onboardingForm.avatar.startsWith("data:image")
-                      ? 'bg-emerald-500/20 border-emerald-400 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                      : 'bg-white/5 border-white/5 hover:border-white/10 text-slate-400'
-                  }`}>
-                    {onboardingForm.avatar.startsWith("data:image") ? "📷 Custom Loaded" : "📷 Upload Photo"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Identity Details</h3>
+                <p className="text-xs text-slate-400">Please provide your full legal name, birthday, and contact details.</p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* Full Name */}
                 <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
                   Full Name <span className="text-rose-500">*</span>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">👤</span>
-                    <input
-                      type="text"
-                      placeholder="Enter your full name"
-                      value={onboardingForm.fullName}
-                      onChange={(e) => {
-                        setOnboardingError("");
-                        setOnboardingForm(current => ({ ...current, fullName: e.target.value }));
-                      }}
-                      className={`h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border text-xs text-white outline-none focus:bg-slate-950 transition-all ${
-                        validationAttempted && !onboardingForm.fullName.trim()
-                          ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
-                          : "border-white/10 focus:border-cyan-500"
-                      }`}
-                      required
-                    />
-                  </div>
-                  {validationAttempted && !onboardingForm.fullName.trim() && (
-                    <span className="text-[10px] text-rose-400 font-black mt-1 flex items-center gap-1 animate-pulse">
-                      ⚠️ Full Name is required / Pakisulat po ang iyong pangalan.
-                    </span>
-                  )}
+                  <input
+                    type="text"
+                    placeholder="Sherwin Lindholm"
+                    value={onboardingForm.fullName}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, fullName: e.target.value }));
+                    }}
+                    className={`h-10 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.fullName.trim() ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  />
                 </label>
 
-                {/* Age */}
+                {/* Birthday */}
                 <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
-                  Age <span className="text-rose-500">*</span>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📅</span>
-                    <input
-                      type="number"
-                      placeholder="e.g. 25"
-                      value={onboardingForm.age}
-                      onChange={(e) => {
-                        setOnboardingError("");
-                        setOnboardingForm(current => ({ ...current, age: e.target.value }));
-                      }}
-                      className={`h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border text-xs text-white outline-none focus:bg-slate-950 transition-all ${
-                        validationAttempted && (!onboardingForm.age.trim() || isNaN(Number(onboardingForm.age)) || Number(onboardingForm.age) <= 0)
-                          ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
-                          : "border-white/10 focus:border-cyan-500"
-                      }`}
-                      required
-                    />
-                  </div>
-                  {validationAttempted && !onboardingForm.age.trim() && (
-                    <span className="text-[10px] text-rose-400 font-black mt-1 flex items-center gap-1 animate-pulse">
-                      ⚠️ Age is required / Pakisulat po ang iyong edad.
-                    </span>
-                  )}
-                  {validationAttempted && onboardingForm.age.trim() && (isNaN(Number(onboardingForm.age)) || Number(onboardingForm.age) <= 0) && (
-                    <span className="text-[10px] text-rose-400 font-black mt-1 flex items-center gap-1 animate-pulse">
-                      ⚠️ Please enter a valid age / Maglagay po ng tamang edad.
-                    </span>
-                  )}
+                  Birthday <span className="text-rose-500">*</span>
+                  <input
+                    type="date"
+                    value={onboardingForm.birthday}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, birthday: e.target.value }));
+                    }}
+                    className={`h-10 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.birthday ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  />
+                </label>
+
+                {/* Age (Auto calculated) */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Age (Calculated)
+                  <input
+                    type="text"
+                    disabled
+                    value={computedOnboardingAge ? `${computedOnboardingAge} years old` : "Select birthdate"}
+                    className="h-10 px-4 rounded-xl bg-slate-900 border border-white/5 text-xs text-slate-500 outline-none cursor-not-allowed"
+                  />
+                </label>
+
+                {/* Gender */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Gender <span className="text-rose-500">*</span>
+                  <select
+                    value={onboardingForm.gender}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, gender: e.target.value }));
+                    }}
+                    className={`h-10 px-3 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.gender ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
                 </label>
 
                 {/* Phone */}
                 <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
-                  Phone Number <span className="text-slate-600 font-normal">(Optional)</span>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📞</span>
-                    <input
-                      type="tel"
-                      placeholder="e.g. +639123456789"
-                      value={onboardingForm.phone}
-                      onChange={(e) => {
-                        setOnboardingError("");
-                        setOnboardingForm(current => ({ ...current, phone: e.target.value }));
-                      }}
-                      className="h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 focus:bg-slate-950 transition-all"
-                    />
-                  </div>
-                </label>
-
-                {/* Address */}
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
-                  Address <span className="text-rose-500">*</span>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">📍</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. Manila, Philippines"
-                      value={onboardingForm.address}
-                      onChange={(e) => {
-                        setOnboardingError("");
-                        setOnboardingForm(current => ({ ...current, address: e.target.value }));
-                      }}
-                      className={`h-12 w-full pl-10 pr-4 rounded-xl bg-slate-950/80 border text-xs text-white outline-none focus:bg-slate-950 transition-all ${
-                        validationAttempted && !onboardingForm.address.trim()
-                          ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
-                          : "border-white/10 focus:border-cyan-500"
-                      }`}
-                      required
-                    />
-                  </div>
-                  {validationAttempted && !onboardingForm.address.trim() && (
-                    <span className="text-[10px] text-rose-400 font-black mt-1 flex items-center gap-1 animate-pulse">
-                      ⚠️ Address is required / Pakisulat po ang iyong tirahan.
-                    </span>
-                  )}
+                  Phone Number
+                  <input
+                    type="tel"
+                    placeholder="+63 900 000 0000"
+                    value={onboardingForm.phone}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, phone: e.target.value }))}
+                    className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  />
                 </label>
               </div>
 
               <div className="flex gap-3 pt-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setOnboardingError("");
-                    setValidationAttempted(false);
-                    setOnboardingStep(1);
-                  }}
-                  className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                  onClick={() => setOnboardingStep(1)}
+                  className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   ◀ Back
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setOnboardingError("");
                     if (!onboardingForm.fullName.trim()) {
-                      setOnboardingError("Full Name is required. Pakisulat po ang iyong pangalan.");
+                      setOnboardingError("Please enter your full name.");
                       setValidationAttempted(true);
                       return;
                     }
-                    if (!onboardingForm.age.trim()) {
-                      setOnboardingError("Age is required. Pakisulat po ang iyong edad.");
+                    if (!onboardingForm.birthday) {
+                      setOnboardingError("Please select your birthday.");
                       setValidationAttempted(true);
                       return;
                     }
-                    if (isNaN(Number(onboardingForm.age)) || Number(onboardingForm.age) <= 0) {
-                      setOnboardingError("Please enter a valid age.");
+                    if (!onboardingForm.gender) {
+                      setOnboardingError("Please select your gender.");
                       setValidationAttempted(true);
                       return;
                     }
-                    if (!onboardingForm.address.trim()) {
-                      setOnboardingError("Address is required. Pakisulat po ang iyong tirahan.");
-                      setValidationAttempted(true);
-                      return;
-                    }
+                    setOnboardingError("");
                     setValidationAttempted(false);
                     setOnboardingStep(3);
                   }}
-                  className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10"
+                  className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10 cursor-pointer"
                 >
                   Continue ▶
                 </button>
@@ -3729,196 +3772,437 @@ function PersonalDashboardPage() {
             </div>
           )}
 
-          {/* STEP 3: SURVEY QUESTIONS */}
+          {/* STEP 3: LOCATION & ADDRESS DETAILS */}
           {onboardingStep === 3 && (
-            <div className="space-y-5 text-left">
+            <div className="space-y-5 text-left animate-fade-in">
               <div className="text-center space-y-2">
-                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Onboarding Survey</h3>
-                <p className="text-xs text-slate-400">Help us customize Vynora to fit your exact work style and purpose.</p>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Location Details</h3>
+                <p className="text-xs text-slate-400">Please provide your home address information for regional compliance logs.</p>
               </div>
 
-              <div className="grid gap-4">
-                {/* Discovery Source */}
-                <label className="grid gap-2 text-xs text-slate-400 font-bold">
-                  🔍 Where did you discover Vynora/Vynora? <span className="text-rose-500">*</span>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Street Address */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                  Street Address <span className="text-rose-500">*</span>
+                  <input
+                    type="text"
+                    placeholder="Blk 1 Upper Federico St"
+                    value={onboardingForm.streetAddress}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, streetAddress: e.target.value }));
+                    }}
+                    className={`h-10 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.streetAddress ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  />
+                </label>
+
+                {/* City */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  City <span className="text-rose-500">*</span>
+                  <input
+                    type="text"
+                    placeholder="Olongapo City"
+                    value={onboardingForm.city}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, city: e.target.value }));
+                    }}
+                    className={`h-10 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.city ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  />
+                </label>
+
+                {/* Province */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Province <span className="text-rose-500">*</span>
+                  <input
+                    type="text"
+                    placeholder="Zambales"
+                    value={onboardingForm.province}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, province: e.target.value }));
+                    }}
+                    className={`h-10 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.province ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  />
+                </label>
+
+                {/* Country */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                  Country
+                  <input
+                    type="text"
+                    placeholder="Philippines"
+                    value={onboardingForm.country}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, country: e.target.value }))}
+                    className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  />
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingStep(2)}
+                  className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  ◀ Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!onboardingForm.streetAddress.trim()) {
+                      setOnboardingError("Please enter your street address.");
+                      setValidationAttempted(true);
+                      return;
+                    }
+                    if (!onboardingForm.city.trim()) {
+                      setOnboardingError("Please enter your city.");
+                      setValidationAttempted(true);
+                      return;
+                    }
+                    if (!onboardingForm.province.trim()) {
+                      setOnboardingError("Please enter your province.");
+                      setValidationAttempted(true);
+                      return;
+                    }
+                    setOnboardingError("");
+                    setValidationAttempted(false);
+                    setOnboardingStep(4);
+                  }}
+                  className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10 cursor-pointer"
+                >
+                  Continue ▶
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: PROFESSIONAL SETUP */}
+          {onboardingStep === 4 && (
+            <div className="space-y-5 text-left animate-fade-in">
+              <div className="text-center space-y-2">
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Professional Setup</h3>
+                <p className="text-xs text-slate-400">Select your active job, profession category, and employment setup.</p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Job Title */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                  Job Title / Role <span className="text-rose-500">*</span>
+                  <input
+                    type="text"
+                    placeholder="e.g. Software Engineer"
+                    value={onboardingForm.position}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, position: e.target.value }));
+                    }}
+                    className={`h-10 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.position.trim() ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  />
+                </label>
+
+                {/* Profession Category */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Profession Category <span className="text-rose-500">*</span>
+                  <select
+                    value={onboardingForm.professionCategory}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, professionCategory: e.target.value }));
+                    }}
+                    className={`h-10 px-3 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.professionCategory ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  >
+                    <option value="">Select Category</option>
+                    <option value="Technology / IT">Technology / IT</option>
+                    <option value="Education">Education</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Business">Business</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Creative / Design">Creative / Design</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+
+                {/* Employment Type */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Employment Type <span className="text-rose-500">*</span>
+                  <select
+                    value={onboardingForm.employmentType}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, employmentType: e.target.value }));
+                    }}
+                    className={`h-10 px-3 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.employmentType ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  >
+                    <option value="">Select Type</option>
+                    <option value="Full Time">Full Time</option>
+                    <option value="Part Time">Part Time</option>
+                    <option value="Freelancer">Freelancer</option>
+                    <option value="Self Employed">Self Employed</option>
+                    <option value="Student">Student</option>
+                    <option value="Business Owner">Business Owner</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+
+                {/* Work Arrangement */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Work Arrangement <span className="text-rose-500">*</span>
+                  <select
+                    value={onboardingForm.workArrangement}
+                    onChange={(e) => {
+                      setOnboardingError("");
+                      setOnboardingForm(current => ({ ...current, workArrangement: e.target.value }));
+                    }}
+                    className={`h-10 px-3 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.workArrangement ? "border-rose-500 bg-rose-500/5" : "border-white/10"
+                    }`}
+                    required
+                  >
+                    <option value="">Select Setup</option>
+                    <option value="On Site">On Site</option>
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Flexible">Flexible</option>
+                  </select>
+                </label>
+
+                {/* Company Name */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Company Name <span className="text-slate-600 font-normal">(Optional)</span>
+                  <input
+                    type="text"
+                    placeholder="Vynora Technologies"
+                    value={onboardingForm.companyName}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, companyName: e.target.value }))}
+                    className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  />
+                </label>
+
+                {/* Department */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Department <span className="text-slate-600 font-normal">(Optional)</span>
+                  <input
+                    type="text"
+                    placeholder="Engineering"
+                    value={onboardingForm.department}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, department: e.target.value }))}
+                    className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  />
+                </label>
+
+                {/* Employee ID */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Employee ID <span className="text-slate-600 font-normal">(Optional)</span>
+                  <input
+                    type="text"
+                    placeholder="EMP-2026-001"
+                    value={onboardingForm.employeeId}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, employeeId: e.target.value }))}
+                    className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  />
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setOnboardingStep(3)}
+                  className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  ◀ Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!onboardingForm.position.trim()) {
+                      setOnboardingError("Please enter your job title / role.");
+                      setValidationAttempted(true);
+                      return;
+                    }
+                    if (!onboardingForm.professionCategory) {
+                      setOnboardingError("Please select your profession category.");
+                      setValidationAttempted(true);
+                      return;
+                    }
+                    if (!onboardingForm.employmentType) {
+                      setOnboardingError("Please select your employment type.");
+                      setValidationAttempted(true);
+                      return;
+                    }
+                    if (!onboardingForm.workArrangement) {
+                      setOnboardingError("Please select your work arrangement setup.");
+                      setValidationAttempted(true);
+                      return;
+                    }
+                    setOnboardingError("");
+                    setValidationAttempted(false);
+                    setOnboardingStep(5);
+                  }}
+                  className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10 cursor-pointer"
+                >
+                  Continue ▶
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 5: CAREER GOALS & SURVEY PREFERENCES */}
+          {onboardingStep === 5 && (
+            <div className="space-y-5 text-left animate-fade-in">
+              <div className="text-center space-y-2">
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Goals & Preferences</h3>
+                <p className="text-xs text-slate-400">Establish personal targets, core skills, and weekly working days.</p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Career Goal */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                  Career Goal
+                  <input
+                    type="text"
+                    placeholder="Become a Full Stack Developer"
+                    value={onboardingForm.careerGoal}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, careerGoal: e.target.value }))}
+                    className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  />
+                </label>
+
+                {/* Skill Focus */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Skill / Field Focus
+                  <input
+                    type="text"
+                    placeholder="React, UI, Node.js"
+                    value={onboardingForm.skillFocus}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, skillFocus: e.target.value }))}
+                    className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  />
+                </label>
+
+                {/* Experience Level */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                  Experience Level
+                  <select
+                    value={onboardingForm.experienceLevel}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, experienceLevel: e.target.value }))}
+                    className="h-10 px-3 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  >
+                    <option value="">Select Level</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Professional">Professional</option>
+                    <option value="Expert">Expert</option>
+                  </select>
+                </label>
+
+                {/* Weekly Productivity Goal */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                  Weekly Productivity Goal (Hours/Week)
+                  <input
+                    type="number"
+                    value={onboardingForm.weeklyProductivityGoal}
+                    onChange={(e) => setOnboardingForm(current => ({ ...current, weeklyProductivityGoal: Number(e.target.value) || 0 }))}
+                    className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
+                  />
+                </label>
+
+                {/* Survey Discovery Source */}
+                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                  🔍 Where did you discover Vynora? <span className="text-rose-500">*</span>
                   <select
                     value={onboardingForm.discoverySource}
                     onChange={(e) => {
                       setOnboardingError("");
                       setOnboardingForm(current => ({ ...current, discoverySource: e.target.value }));
                     }}
-                    className={`h-12 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none transition-all ${
-                      validationAttempted && !onboardingForm.discoverySource
-                        ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
-                        : "border-white/10 focus:border-cyan-500"
+                    className={`h-10 px-3 rounded-xl bg-slate-950 border text-xs text-white outline-none focus:border-cyan-500 transition-all ${
+                      validationAttempted && !onboardingForm.discoverySource ? "border-rose-500 bg-rose-500/5" : "border-white/10"
                     }`}
                     required
                   >
                     <option value="">Select an option</option>
                     <option value="Google Search">Google Search</option>
                     <option value="Friend/Colleague">Friend / Colleague</option>
-                    <option value="Social Media">Social Media (FB, Twitter, LinkedIn)</option>
-                    <option value="YouTube / Video Review">YouTube / Video Review</option>
-                    <option value="Github / Open Source Search">Github / Open Source Search</option>
+                    <option value="Social Media">Social Media</option>
+                    <option value="Github / Open Source">Github / Open Source</option>
                     <option value="Other">Other</option>
                   </select>
-                  {validationAttempted && !onboardingForm.discoverySource && (
-                    <span className="text-[10px] text-rose-400 font-black flex items-center gap-1 animate-pulse">
-                      ⚠️ Discovery Source is required. Pakisagot po kung saan ninyo kami natuklasan.
-                    </span>
-                  )}
                 </label>
 
-                {/* Purpose */}
-                <label className="grid gap-2 text-xs text-slate-400 font-bold">
-                  🎯 What is your main purpose on using Vynora? <span className="text-rose-500">*</span>
-                  <select
-                    value={onboardingForm.purpose}
-                    onChange={(e) => {
-                      setOnboardingError("");
-                      setOnboardingForm(current => ({ ...current, purpose: e.target.value }));
-                    }}
-                    className={`h-12 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none transition-all ${
-                      validationAttempted && !onboardingForm.purpose
-                        ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
-                        : "border-white/10 focus:border-cyan-500"
-                    }`}
-                    required
-                  >
-                    <option value="">Select an option</option>
-                    <option value="Track personal working hours">Track personal working / freelance hours</option>
-                    <option value="Calculate and manage my payroll">Calculate and manage my payroll/vouchers</option>
-                    <option value="Manage dynamic schedules and shifts">Manage dynamic schedules and shifts</option>
-                    <option value="Increase focus and work productivity">Increase focus and work productivity</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  {validationAttempted && !onboardingForm.purpose && (
-                    <span className="text-[10px] text-rose-400 font-black flex items-center gap-1 animate-pulse">
-                      ⚠️ Main Purpose is required. Pakisagot po ang layunin ng paggamit ninyo ng Vynora.
-                    </span>
-                  )}
-                </label>
-
-                {/* Professional Status */}
-                <label className="grid gap-2 text-xs text-slate-400 font-bold">
-                  👔 What is your current professional status? <span className="text-rose-500">*</span>
-                  <select
-                    value={onboardingForm.employmentStatus}
-                    onChange={(e) => {
-                      setOnboardingError("");
-                      setOnboardingForm(current => ({ ...current, employmentStatus: e.target.value }));
-                    }}
-                    className={`h-12 px-4 rounded-xl bg-slate-950 border text-xs text-white outline-none transition-all ${
-                      validationAttempted && !onboardingForm.employmentStatus
-                        ? "border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.15)] bg-rose-500/[0.02]"
-                        : "border-white/10 focus:border-cyan-500"
-                    }`}
-                    required
-                  >
-                    <option value="">Select an option</option>
-                    <option value="Freelancer / Independent Professional">Freelancer / Independent Professional</option>
-                    <option value="Employee / Worker">Employee / Salaried Worker</option>
-                    <option value="Business Owner / Workspace Admin">Business Owner / Workspace Admin</option>
-                    <option value="Student">Student / Scholar</option>
-                    <option value="Other">Other / Self-employed</option>
-                  </select>
-                  {validationAttempted && !onboardingForm.employmentStatus && (
-                    <span className="text-[10px] text-rose-400 font-black flex items-center gap-1 animate-pulse">
-                      ⚠️ Professional Status is required. Pakisagot po ang inyong propesyon.
-                    </span>
-                  )}
-                </label>
+                {/* Preferred Working Days */}
+                <div className="sm:col-span-2 space-y-2">
+                  <span className="block text-xs font-bold text-slate-400">Preferred Working Days</span>
+                  <div className="flex flex-wrap gap-1.5 justify-center">
+                    {daysOfWeek.map((day) => {
+                      const isChecked = (onboardingForm.preferredWorkingDays || []).includes(day.value);
+                      return (
+                        <label
+                          key={day.value}
+                          className={`flex items-center gap-1.5 px-2.5 py-1.5 border rounded-lg text-[10px] font-bold cursor-pointer transition select-none ${
+                            isChecked
+                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 animate-none"
+                              : "border-white/5 bg-slate-950/30 text-slate-500 hover:bg-slate-950/50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleOnboardingDayCheckboxChange(day.value)}
+                            className="rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-0 w-3 h-3"
+                          />
+                          <span>{day.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setOnboardingError("");
-                    setValidationAttempted(false);
-                    setOnboardingStep(2);
-                  }}
-                  className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                  disabled={submitting}
+                  onClick={() => setOnboardingStep(4)}
+                  className="flex-1 h-12 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   ◀ Back
                 </button>
                 <button
                   type="button"
+                  disabled={submitting}
                   onClick={() => {
-                    setOnboardingError("");
                     if (!onboardingForm.discoverySource) {
-                      setOnboardingError("Discovery Source is required. Pakisagot po kung saan ninyo kami natuklasan.");
+                      setOnboardingError("Please select where you discovered Vynora.");
                       setValidationAttempted(true);
                       return;
                     }
-                    if (!onboardingForm.purpose) {
-                      setOnboardingError("Main Purpose is required. Pakisagot po ang layunin ng paggamit ninyo ng Vynora.");
-                      setValidationAttempted(true);
-                      return;
-                    }
-                    if (!onboardingForm.employmentStatus) {
-                      setOnboardingError("Professional Status is required. Pakisagot po ang inyong kasalukuyang propesyon.");
-                      setValidationAttempted(true);
-                      return;
-                    }
-                    setValidationAttempted(false);
-                    setOnboardingStep(4);
-                  }}
-                  className="flex-1 h-12 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/10"
-                >
-                  Continue ▶
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: READY TO LAUNCH */}
-          {onboardingStep === 4 && (
-            <div className="space-y-6">
-              <div className="mx-auto h-20 w-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-4xl shadow-xl shadow-emerald-500/5">
-                🎉
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">You're All Set!</h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
-                  Your premium corporate profile has been fully configured. Vynora is now customized for your specific work needs.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/20 border border-white/5 rounded-2xl p-4 text-left text-xs text-slate-400 space-y-2 divide-y divide-white/5">
-                <div className="pb-2 flex justify-between items-center">
-                  <span className="font-bold">👤 Profile Avatar</span>
-                  <span className="text-white font-mono">{onboardingForm.avatar.length > 2 ? "📷 Custom Photo" : onboardingForm.avatar}</span>
-                </div>
-                <div className="py-2 flex justify-between items-center">
-                  <span className="font-bold">👔 Name / Age</span>
-                  <span className="text-white font-semibold">{onboardingForm.fullName} ({onboardingForm.age} yrs)</span>
-                </div>
-                <div className="py-2 flex justify-between items-center">
-                  <span className="font-bold">🎯 Primary Focus</span>
-                  <span className="text-white font-semibold italic text-right max-w-[200px] truncate">{onboardingForm.purpose}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => {
                     setOnboardingError("");
-                    setOnboardingStep(3);
+                    setValidationAttempted(false);
+                    handleCompleteOnboarding();
                   }}
-                  className="h-14 w-20 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition cursor-pointer flex items-center justify-center"
+                  className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-xs font-black text-white rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/10 cursor-pointer"
                 >
-                  ◀ Back
-                </button>
-                <button
-                  type="button"
-                  disabled={submitting}
-                  onClick={handleCompleteOnboarding}
-                  className="flex-1 h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-sm font-black text-white rounded-xl shadow-lg shadow-emerald-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {submitting ? "Launching..." : "Launch My Workspace 🚀"}
+                  {submitting ? "Launching..." : "Complete Setup & Launch 🚀"}
                 </button>
               </div>
             </div>
