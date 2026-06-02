@@ -110,7 +110,7 @@ export default function AttendanceActions({
                 <div>
                   <h3 className="font-black text-white">Time Tracking</h3>
                   <p className="mt-1 text-sm text-slate-400">
-                    Trackly will show the next allowed action only.
+                    Vynora will show the next allowed action only.
                   </p>
                 </div>
                 {permissions.locationRequired && (

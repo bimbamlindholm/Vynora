@@ -22,7 +22,7 @@ export default function WelcomeCard({ employee, permissions, workspace }) {
             </span>
           </h1>
           <div className="mt-4 flex flex-wrap gap-2 text-sm font-semibold text-slate-300">
-            <StatusPill label={workspace?.workspace_name || "Trackly Workspace"} />
+            <StatusPill label={workspace?.workspace_name || "Vynora Workspace"} />
             <StatusPill label={`Status today: ${employee.status || "Offline"}`} />
           </div>
         </div>

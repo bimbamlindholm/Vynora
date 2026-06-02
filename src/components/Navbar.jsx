@@ -15,14 +15,14 @@ function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-[#07111F]/65 backdrop-blur-2xl">
       <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Trackly home">
+        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Vynora home">
           <img
-            src="/trackly-logo.png"
-            alt="Trackly"
+            src="/vynora-logo.png"
+            alt="Vynora"
             className="h-11 w-11 shrink-0 object-contain drop-shadow-[0_0_18px_rgba(45,212,191,0.38)]"
           />
           <div className="leading-none">
-            <span className="block text-xl font-black tracking-wide text-white">TRACKLY</span>
+            <span className="block text-xl font-black tracking-wide text-white">VYNORA</span>
             <span className="hidden text-[0.58rem] font-bold uppercase tracking-[0.34em] text-cyan-300 sm:block">
               Track Time. Grow Better.
             </span>

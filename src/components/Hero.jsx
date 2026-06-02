@@ -85,8 +85,8 @@ function DashboardMockup() {
           <aside className="flex flex-col justify-between border-r border-white/5 pr-3">
             <div>
               <div className="mb-7 flex items-center gap-2">
-                <img src="/trackly-logo.png" alt="" className="h-7 w-7 object-contain" />
-                <span className="hidden text-sm font-black text-white sm:inline uppercase">TRACKLY V3</span>
+                <img src="/vynora-logo.png" alt="" className="h-7 w-7 object-contain" />
+                <span className="hidden text-sm font-black text-white sm:inline uppercase">VYNORA V3</span>
               </div>
               <div className="space-y-2">
                 {[
@@ -290,7 +290,7 @@ function Hero() {
           transition={{ delay: 0.35, duration: 0.7 }}
           className="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-400 sm:mt-7 sm:text-lg sm:leading-8 lg:mx-0"
         >
-          Trackly helps individuals and teams track attendance, manage work hours, and grow productivity - all in one beautifully simple platform.
+          Vynora helps individuals and teams track attendance, manage work hours, and grow productivity - all in one beautifully simple platform.
         </motion.p>
 
         <motion.div
@@ -363,8 +363,8 @@ function Hero() {
                 T
               </span>
               <div>
-                <h3 className="text-xl font-black text-white">Download Trackly App</h3>
-                <p className="text-xs text-slate-400">Run Trackly V3 natively on your desktop or mobile</p>
+                <h3 className="text-xl font-black text-white">Download Vynora App</h3>
+                <p className="text-xs text-slate-400">Run Vynora V3 natively on your desktop or mobile</p>
               </div>
             </div>
 

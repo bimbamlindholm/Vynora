@@ -20,7 +20,7 @@ export default function EmployeePayslipModal({ payslip, profile, onClose, worksp
 
   const startDate = payslip?.payroll_batches?.start_date;
   const endDate = payslip?.payroll_batches?.end_date;
-  const companyName = workspace?.workspace_name || workspace?.name || "Trackly Inc.";
+  const companyName = workspace?.workspace_name || workspace?.name || "Vynora Inc.";
 
   // Fetch approved leaves and compute absences for the period
   useEffect(() => {
@@ -350,7 +350,7 @@ export default function EmployeePayslipModal({ payslip, profile, onClose, worksp
           <div className="flex flex-col items-center">
             <div className="w-48 border-b border-black"></div>
             <p className="mt-2 font-bold text-slate-700">Authorized Signatory</p>
-            <p className="text-[10px] text-slate-500">Trackly Automated Payroll</p>
+            <p className="text-[10px] text-slate-500">Vynora Automated Payroll</p>
           </div>
         </div>
       </div>

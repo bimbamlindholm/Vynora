@@ -47,7 +47,7 @@ export function profileToEmployee(profile, membership = {}) {
   let localFace = "";
   if (typeof window !== "undefined" && profile?.id) {
     try {
-      localFace = localStorage.getItem(`trackly_local_face_photo_${profile.id}`) || "";
+      localFace = localStorage.getItem(`vynora_local_face_photo_${profile.id}`) || "";
     } catch (e) {
       console.warn("localStorage read failed:", e);
     }
@@ -90,7 +90,7 @@ export function workspaceToView(workspace, profile) {
       year: "numeric",
     }),
     industry: workspace?.industry || "Office Team",
-    name: workspace?.workspace_name || "Trackly Workspace",
+    name: workspace?.workspace_name || "Vynora Workspace",
     shiftStartTime: workspace?.shift_start_time || "08:00",
     expectedWorkHours: Number(workspace?.expected_work_hours || 8),
     lateGraceMinutes: Number(workspace?.late_grace_minutes || 0),

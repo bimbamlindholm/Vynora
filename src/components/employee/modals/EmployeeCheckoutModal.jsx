@@ -3,7 +3,7 @@ import { X, Sparkles } from "lucide-react";
 
 /**
  * Modal that guides users through a simulated premium checkout playground to unlock
- * Trackly Premium benefits (real-time earnings calculation, PDF payslip downloads, analytics, etc.)
+ * Vynora Premium benefits (real-time earnings calculation, PDF payslip downloads, analytics, etc.)
  */
 export default function EmployeeCheckoutModal({ profile, onClose, onSuccess }) {
   const [billing, setBilling] = useState("yearly"); // monthly | yearly | twoYears | lifetime
@@ -26,8 +26,8 @@ export default function EmployeeCheckoutModal({ profile, onClose, onSuccess }) {
       setTimeout(() => {
         setStep(3);
         setTimeout(() => {
-          localStorage.setItem("trackly_sub_" + profile.id, "true");
-          window.dispatchEvent(new Event("trackly_subscription_changed"));
+          localStorage.setItem("vynora_sub_" + profile.id, "true");
+          window.dispatchEvent(new Event("vynora_subscription_changed"));
           setIsUpgrading(false);
           setStep(0);
           onSuccess();

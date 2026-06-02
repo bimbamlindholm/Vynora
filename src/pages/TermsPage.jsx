@@ -38,14 +38,14 @@ export default function TermsPage() {
               <section>
                 <h2 className="text-xl font-bold text-white mb-3">1. Acceptance of Terms</h2>
                 <p>
-                  Welcome to Trackly V3. By creating an account, connecting your Google account, or using our timekeeping, DTR, and HRIS services, you agree to comply with and be bound by these Terms of Service. If you do not agree to these terms, please do not use the application.
+                  Welcome to Vynora V3. By creating an account, connecting your Google account, or using our timekeeping, DTR, and HRIS services, you agree to comply with and be bound by these Terms of Service. If you do not agree to these terms, please do not use the application.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-xl font-bold text-white mb-3">2. Description of Services</h2>
                 <p>
-                  Trackly V3 is a cloud-based attendance, DTR (Daily Time Record), and timekeeping management application designed for Admins (Workspace Owners), Employees (Workspace Members), and Personal Trackers. We facilitate shifts, payroll logging, attendance corrections, and Google OAuth integrations to enable clean HR operations.
+                  Vynora V3 is a cloud-based attendance, DTR (Daily Time Record), and timekeeping management application designed for Admins (Workspace Owners), Employees (Workspace Members), and Personal Trackers. We facilitate shifts, payroll logging, attendance corrections, and Google OAuth integrations to enable clean HR operations.
                 </p>
               </section>
 
@@ -66,21 +66,21 @@ export default function TermsPage() {
               <section>
                 <h2 className="text-xl font-bold text-white mb-3">5. Supplying Google OAuth</h2>
                 <p>
-                  By logging in or linking your account via Google SSO, you grant Trackly permissions to access your basic profile metadata (Full Name, Email address, and profile picture). Trackly does not read, write, or access any other personal information on your Google Account unless explicitly asked.
+                  By logging in or linking your account via Google SSO, you grant Vynora permissions to access your basic profile metadata (Full Name, Email address, and profile picture). Vynora does not read, write, or access any other personal information on your Google Account unless explicitly asked.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-xl font-bold text-white mb-3">6. Modifications to Service & Terms</h2>
                 <p>
-                  We reserve the right to modify these Terms of Service or features of Trackly V3 at any time. Your continued use of the application following updates constitutes your acceptance of the updated terms.
+                  We reserve the right to modify these Terms of Service or features of Vynora V3 at any time. Your continued use of the application following updates constitutes your acceptance of the updated terms.
                 </p>
               </section>
 
               <section className="pt-6 border-t border-white/5 flex items-center gap-3">
                 <ShieldCheck className="text-cyan-400 shrink-0" size={24} />
                 <p className="text-xs text-slate-400">
-                  Trackly V3 guarantees all timekeeping logs are kept securely within the hosted database. For questions regarding terms, contact your system administrator.
+                  Vynora V3 guarantees all timekeeping logs are kept securely within the hosted database. For questions regarding terms, contact your system administrator.
                 </p>
               </section>
             </div>

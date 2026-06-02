@@ -168,7 +168,7 @@ export default function SkeletonLoader() {
         ))}
       </div>
 
-      {/* Floating Center Badge: Trackly Session Lock Loader */}
+      {/* Floating Center Badge: Vynora Session Lock Loader */}
       <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 backdrop-blur-[1px]">
         <motion.div
           initial={{ scale: 0.96, opacity: 0 }}
@@ -180,7 +180,7 @@ export default function SkeletonLoader() {
               🌀
             </span>
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">Trackly</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">Vynora</p>
           <h1 className="mt-2 text-base font-black text-white">Checking session</h1>
           <p className="mt-1 text-xs text-slate-400">Loading your workspace access...</p>
         </motion.div>

@@ -66,10 +66,10 @@ export default function EmployeeScheduleSection({ profile, workspace }) {
         const data = await fetchMySchedules(workspaceId, userId);
         setSchedules(data);
         // Cache locally for offline viewing
-        localStorage.setItem(`trackly_cache_schedules_${userId}`, JSON.stringify(data));
+        localStorage.setItem(`vynora_cache_schedules_${userId}`, JSON.stringify(data));
       } else {
         // Load from cache
-        const cached = localStorage.getItem(`trackly_cache_schedules_${userId}`);
+        const cached = localStorage.getItem(`vynora_cache_schedules_${userId}`);
         if (cached) {
           setSchedules(JSON.parse(cached));
           addToast("Loaded schedule from local offline cache.", "info");
@@ -78,7 +78,7 @@ export default function EmployeeScheduleSection({ profile, workspace }) {
     } catch (err) {
       console.error(err);
       // Fallback to cache on error
-      const cached = localStorage.getItem(`trackly_cache_schedules_${userId}`);
+      const cached = localStorage.getItem(`vynora_cache_schedules_${userId}`);
       if (cached) {
         setSchedules(JSON.parse(cached));
       }

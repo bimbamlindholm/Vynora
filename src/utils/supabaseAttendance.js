@@ -42,7 +42,7 @@ export function getEmployeeOverridenRules(employeeId, workspaceId, baseRules) {
     let presets = baseRules?.customRulesPresets || baseRules?.workspace?.custom_rules_presets;
     
     if (!presets || presets.length === 0) {
-      const rawPresets = localStorage.getItem(`trackly_custom_rules_presets_${workspaceId}`);
+      const rawPresets = localStorage.getItem(`vynora_custom_rules_presets_${workspaceId}`);
       if (rawPresets) {
         presets = JSON.parse(rawPresets);
       }

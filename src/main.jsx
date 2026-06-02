@@ -21,10 +21,10 @@ if ("serviceWorker" in navigator && !import.meta.env.DEV) {
     navigator.serviceWorker
       .register("/sw.js")
       .then((reg) => {
-        console.log("Trackly V3 PWA Service Worker registered with scope:", reg.scope);
+        console.log("Vynora V3 PWA Service Worker registered with scope:", reg.scope);
       })
       .catch((err) => {
-        console.error("Trackly V3 PWA Service Worker registration failed:", err);
+        console.error("Vynora V3 PWA Service Worker registration failed:", err);
       });
   });
 }

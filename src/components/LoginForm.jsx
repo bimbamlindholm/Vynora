@@ -45,8 +45,8 @@ function LoginForm({ portal }) {
   const [formValues, setFormValues] = useState(() => {
     const initial = {};
     if (emailField) {
-      const remembered = localStorage.getItem("trackly_remembered_email");
-      const rememberMe = localStorage.getItem("trackly_remember_me") !== "false";
+      const remembered = localStorage.getItem("vynora_remembered_email");
+      const rememberMe = localStorage.getItem("vynora_remember_me") !== "false";
       if (remembered && rememberMe) {
         initial[emailField] = remembered;
       }
@@ -58,7 +58,7 @@ function LoginForm({ portal }) {
 
   // True Remember Me State
   const [rememberMe, setRememberMe] = useState(() => {
-    return localStorage.getItem("trackly_remember_me") !== "false";
+    return localStorage.getItem("vynora_remember_me") !== "false";
   });
 
   const updateValue = (name, value) => {
@@ -112,11 +112,11 @@ function LoginForm({ portal }) {
     try {
       // Save or clear email under Remember Me
       if (rememberMe && email) {
-        localStorage.setItem("trackly_remembered_email", email.trim());
-        localStorage.setItem("trackly_remember_me", "true");
+        localStorage.setItem("vynora_remembered_email", email.trim());
+        localStorage.setItem("vynora_remember_me", "true");
       } else {
-        localStorage.removeItem("trackly_remembered_email");
-        localStorage.setItem("trackly_remember_me", "false");
+        localStorage.removeItem("vynora_remembered_email");
+        localStorage.setItem("vynora_remember_me", "false");
       }
 
       const redirectTo = await login({
@@ -178,8 +178,8 @@ function LoginForm({ portal }) {
         </div>
 
         <form autoComplete="off" className="grid gap-4" onSubmit={handleSubmit}>
-          <input autoComplete="false" className="hidden" name="trackly-hidden-user" tabIndex="-1" type="text" />
-          <input autoComplete="new-password" className="hidden" name="trackly-hidden-pass" tabIndex="-1" type="password" />
+          <input autoComplete="false" className="hidden" name="vynora-hidden-user" tabIndex="-1" type="text" />
+          <input autoComplete="new-password" className="hidden" name="vynora-hidden-pass" tabIndex="-1" type="password" />
           {portal.fields.map((field) => (
             <LoginField
               key={field.name}
@@ -249,7 +249,7 @@ function LoginField({ field, onChange, onTogglePassword, passwordVisible, value 
           autoComplete={autoCompleteValue}
           data-1p-ignore="true"
           data-lpignore="true"
-          name={`trackly-${field.name}-no-autofill`}
+          name={`vynora-${field.name}-no-autofill`}
           onChange={(event) => onChange(event.target.value)}
           type={isPassword && !passwordVisible ? "password" : "text"}
           value={value}

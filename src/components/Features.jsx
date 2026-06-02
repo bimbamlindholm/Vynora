@@ -45,13 +45,13 @@ function Features() {
       <div className="glass-panel rounded-2xl p-6 sm:p-8 lg:p-9">
         <div className="grid gap-8 lg:grid-cols-[0.95fr_2.05fr] lg:items-start">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">Why choose Trackly?</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">Why choose Vynora?</p>
             <h2 className="mt-5 max-w-md text-[clamp(2rem,4vw,3.4rem)] font-black leading-tight text-white">
               Everything you need to <span className="text-violet-400">track</span> and{" "}
               <span className="text-cyan-300">grow.</span>
             </h2>
             <p className="mt-6 max-w-md text-base leading-8 text-slate-400">
-              Trackly is more than just a time tracker. It is your partner in building discipline, improving productivity, and achieving your goals.
+              Vynora is more than just a time tracker. It is your partner in building discipline, improving productivity, and achieving your goals.
             </p>
           </div>
 

@@ -92,7 +92,7 @@ function ResetPasswordPage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-400 to-violet-500 text-sm font-black text-white shadow-lg">
                 T
               </span>
-              Trackly
+              Vynora
             </Link>
           </header>
 
@@ -218,7 +218,7 @@ function ResetPasswordPage() {
 
           {/* Footer */}
           <footer className="w-full border-t border-white/5 bg-[#07111F]/50 py-5 text-center text-xs text-slate-500">
-            © {new Date().getFullYear()} Trackly. All rights reserved. Premium Corporate Edition.
+            © {new Date().getFullYear()} Vynora. All rights reserved. Premium Corporate Edition.
           </footer>
         </div>
       </main>

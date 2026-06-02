@@ -41,8 +41,8 @@ export default function CompleteRegistrationPage() {
     setSubmitting(true);
     try {
       await logout();
-      localStorage.removeItem("trackly_oauth_pending_role");
-      localStorage.removeItem("trackly_oauth_pending_workspace");
+      localStorage.removeItem("vynora_oauth_pending_role");
+      localStorage.removeItem("vynora_oauth_pending_workspace");
       addToast("Account creation cancelled. Starting over.", "info");
       navigate("/", { replace: true });
     } catch (err) {
@@ -65,8 +65,8 @@ export default function CompleteRegistrationPage() {
       return;
     }
 
-    const pendingRole = localStorage.getItem("trackly_oauth_pending_role") || "personal";
-    const pendingWorkspace = localStorage.getItem("trackly_oauth_pending_workspace") || "";
+    const pendingRole = localStorage.getItem("vynora_oauth_pending_role") || "personal";
+    const pendingWorkspace = localStorage.getItem("vynora_oauth_pending_workspace") || "";
     
     setRole(pendingRole);
     
@@ -129,7 +129,7 @@ export default function CompleteRegistrationPage() {
         payrollPeriod: form.payrollPeriod,
         manualPassword: form.manualPassword,
       });
-      addToast("Welcome to Trackly! Your profile has been created successfully.", "success");
+      addToast("Welcome to Vynora! Your profile has been created successfully.", "success");
       navigate(redirectPath);
     } catch (err) {
       setError(err.message || "Failed to complete registration.");
@@ -172,12 +172,12 @@ export default function CompleteRegistrationPage() {
             {/* Logo */}
             <div className="mb-8 flex flex-col items-center gap-3 text-center">
               <img
-                src="/trackly-logo.png"
-                alt="Trackly Logo"
+                src="/vynora-logo.png"
+                alt="Vynora Logo"
                 className="h-16 w-16 object-contain drop-shadow-[0_0_24px_rgba(45,212,191,0.38)]"
               />
               <div>
-                <span className="block text-2xl font-black tracking-wide text-white">TRACKLY</span>
+                <span className="block text-2xl font-black tracking-wide text-white">VYNORA</span>
                 <span className="text-[0.62rem] font-bold uppercase tracking-[0.34em] text-cyan-300">
                   Track Time. Grow Better.
                 </span>

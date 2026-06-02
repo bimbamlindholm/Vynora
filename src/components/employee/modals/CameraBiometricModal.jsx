@@ -40,7 +40,7 @@ async function applyBiometricWatermark(base64Image, latitude, longitude, actionL
       // 1. Draw badge
       ctx.font = "bold 10px Inter, system-ui, sans-serif";
       ctx.fillStyle = "#22d3ee";
-      ctx.fillText("🛡️ TRACKLY BIOMETRIC VERIFIED", 15, size - bannerHeight + 11);
+      ctx.fillText("🛡️ VYNORA BIOMETRIC VERIFIED", 15, size - bannerHeight + 11);
       
       // Draw Action label (e.g. "TIME IN") in neon green block
       ctx.font = "bold 9px Inter, system-ui, sans-serif";

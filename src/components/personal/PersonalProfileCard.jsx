@@ -34,7 +34,7 @@ export default function PersonalProfileCard({
             )}
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-white mt-1">Profile & Work Information</h2>
-          <p className="text-xs text-slate-400 mt-1">Manage your identity, personal profile photo, government IDs, and job details synced to Trackly Cloud.</p>
+          <p className="text-xs text-slate-400 mt-1">Manage your identity, personal profile photo, government IDs, and job details synced to Vynora Cloud.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -294,7 +294,7 @@ export default function PersonalProfileCard({
               Subscription & Billing
             </h3>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Trackly V3 runs on flexible, transparent tiers. Choose a plan that matches your current profession.
+              Vynora V3 runs on flexible, transparent tiers. Choose a plan that matches your current profession.
             </p>
             
             <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 space-y-3.5">
@@ -328,7 +328,7 @@ export default function PersonalProfileCard({
                 <button
                   type="button"
                   onClick={() => {
-                    localStorage.setItem("trackly_mock_subscription_tier", "pro");
+                    localStorage.setItem("vynora_mock_subscription_tier", "pro");
                     setSubscriptionTier("pro");
                   }}
                   className="glow-button w-full py-3.5 rounded-xl text-center text-xs font-black text-white cursor-pointer"
@@ -341,7 +341,7 @@ export default function PersonalProfileCard({
                     type="button"
                     onClick={() => {
                       if (window.confirm("Are you sure you want to cancel your Solo Pro subscription? You will lose access to Estimated Pay calculations immediately.")) {
-                        localStorage.setItem("trackly_mock_subscription_tier", "free");
+                        localStorage.setItem("vynora_mock_subscription_tier", "free");
                         setSubscriptionTier("free");
                       }
                     }}
@@ -352,7 +352,7 @@ export default function PersonalProfileCard({
                   <button
                     type="button"
                     onClick={() => {
-                      localStorage.setItem("trackly_mock_subscription_tier", "free");
+                      localStorage.setItem("vynora_mock_subscription_tier", "free");
                       setSubscriptionTier("free");
                     }}
                     className="w-1/2 py-3 rounded-xl border border-white/5 bg-slate-800/85 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-black transition cursor-pointer"

@@ -1,6 +1,6 @@
 import { getActionLabel, getActionStatus, formatRecordTime, todayKey } from "./supabaseAttendance";
 
-const QUEUE_KEY = "trackly_offline_attendance_queue";
+const QUEUE_KEY = "vynora_offline_attendance_queue";
 
 /**
  * Retrieves the current offline queue for the logged-in user.

@@ -94,7 +94,7 @@ export default function PersonalHeader({
         <div className="mb-4 flex items-center justify-center border-b border-white/5 bg-slate-950/20 px-4 pb-6 pt-8">
           <img
             src="/logo-01.png"
-            alt="Trackly Logo"
+            alt="Vynora Logo"
             className="h-auto max-h-[96px] w-full object-contain"
           />
         </div>
@@ -148,7 +148,7 @@ export default function PersonalHeader({
 
       {/* --- MOBILE TOP BAR --- */}
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-slate-950/70 px-4 py-3 backdrop-blur-xl md:hidden">
-        <img src="/logo-01.png" alt="Trackly Logo" className="h-12 w-auto object-contain" />
+        <img src="/logo-01.png" alt="Vynora Logo" className="h-12 w-auto object-contain" />
 
         <button
           type="button"
@@ -205,7 +205,7 @@ export default function PersonalHeader({
                 <div className="mb-5 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-400">
-                      {role === "employee" ? "Trackly - Employee Portal" : "Trackly - Personal Portal"}
+                      {role === "employee" ? "Vynora - Employee Portal" : "Vynora - Personal Portal"}
                     </p>
                     <h2 className="mt-1 text-lg font-black text-white">More Options</h2>
                   </div>

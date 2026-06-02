@@ -19,9 +19,9 @@ export default function EmployeeHeader({ onLogout, activeTab, setActiveTab, isMa
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#07111F]/80 px-3 py-3 backdrop-blur-2xl sm:px-6 lg:py-4">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
         <Link to="/employee-dashboard" className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-          <img src="/trackly-logo.png" alt="Trackly" className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
+          <img src="/vynora-logo.png" alt="Vynora" className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
           <div className="min-w-0 leading-none">
-            <span className="block truncate text-lg font-black sm:text-2xl">TRACKLY</span>
+            <span className="block truncate text-lg font-black sm:text-2xl">VYNORA</span>
             <span className="hidden text-[0.56rem] font-bold uppercase tracking-[0.28em] text-cyan-300 sm:block">
               Employee Portal
             </span>

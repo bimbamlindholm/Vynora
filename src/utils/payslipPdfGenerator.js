@@ -52,7 +52,7 @@ export function generatePayslipPdf(payrollResult, workspaceRules = {}, dateRange
     format: "letter",
   });
 
-  // Color Palette - Trackly Sleek Premium Dark/Light Contrast
+  // Color Palette - Vynora Sleek Premium Dark/Light Contrast
   const colors = {
     primary: [7, 17, 31],      // #07111F Deep Navy
     accent: [6, 182, 212],     // #06B6D4 Neon Cyan
@@ -85,7 +85,7 @@ export function generatePayslipPdf(payrollResult, workspaceRules = {}, dateRange
 
   // Title
   doc.setFontSize(18);
-  doc.text("TRACKLY PAYROLL SYSTEM", 85, 48);
+  doc.text("VYNORA PAYROLL SYSTEM", 85, 48);
   doc.setFont("Helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...colors.accent);
@@ -296,7 +296,7 @@ export function generatePayslipPdf(payrollResult, workspaceRules = {}, dateRange
   doc.setFont("Helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(200, 200, 200);
-  doc.text("This is a system-generated document. No signature is required under Trackly PWA Audit regulations.", 65, y + 54);
+  doc.text("This is a system-generated document. No signature is required under Vynora PWA Audit regulations.", 65, y + 54);
 
   // ----------------------------------------------------
   // SECTION: Verification Audit Block
@@ -309,7 +309,7 @@ export function generatePayslipPdf(payrollResult, workspaceRules = {}, dateRange
   doc.setFont("Helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(...colors.textDark);
-  doc.text("SECURITY AUDIT METRICS (TRACKLY V3 PWA SYSTEM)", 55, y + 16);
+  doc.text("SECURITY AUDIT METRICS (VYNORA V3 PWA SYSTEM)", 55, y + 16);
 
   doc.setFont("Helvetica", "normal");
   doc.setFontSize(7.5);
@@ -317,7 +317,7 @@ export function generatePayslipPdf(payrollResult, workspaceRules = {}, dateRange
   doc.text(`Reference ID: TRK-${employee.id ? employee.id.substring(0, 8) : "N/A"}-${new Date().getTime().toString().substring(7)}`, 55, y + 30);
   doc.text(`Digital Fingerprint: sha256:${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`, 55, y + 42);
 
-  doc.text("Protected by Trackly Security Cryptography Protocol V3. Certified corporate release record.", 320, y + 36);
+  doc.text("Protected by Vynora Security Cryptography Protocol V3. Certified corporate release record.", 320, y + 36);
 
   // Save the PDF
   const filename = `Payslip_${employee.fullName ? employee.fullName.replace(/\s+/g, "_") : "Employee"}_${dateRangeStr ? dateRangeStr.replace(/\s+/g, "") : "Payroll"}.pdf`;

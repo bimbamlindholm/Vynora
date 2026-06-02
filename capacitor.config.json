@@ -1,0 +1,8 @@
+{
+  "appId": "com.vynora.app",
+  "appName": "Vynora",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

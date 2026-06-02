@@ -18,7 +18,7 @@ function AboutUs() {
           <div className="lg:col-span-7">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/5 px-4 py-1.5 text-xs font-bold text-cyan-200 shadow-[0_0_24px_rgba(6,182,212,0.12)]">
               <Sparkles size={13} className="text-violet-300 animate-pulse" />
-              About Trackly
+              About Vynora
             </div>
             
             <h2 className="mt-5 text-[clamp(2rem,3.8vw,3.2rem)] font-black leading-tight text-white">
@@ -26,7 +26,7 @@ function AboutUs() {
             </h2>
             
             <p className="mt-6 text-sm leading-relaxed text-slate-300">
-              Trackly V3 was founded on a simple principle: **timekeeping should be bulletproof, compliant, and zero-friction.** Legacy biometric scanners are expensive, standard HR suites are clunky, and manual syncing leads to payroll errors. We bridge the gap between admins and employees with a modern Progressive Web App (PWA) that operates securely on any device.
+              Vynora V3 was founded on a simple principle: **timekeeping should be bulletproof, compliant, and zero-friction.** Legacy biometric scanners are expensive, standard HR suites are clunky, and manual syncing leads to payroll errors. We bridge the gap between admins and employees with a modern Progressive Web App (PWA) that operates securely on any device.
             </p>
             
             {/* Mission, Vision, Goals Grid */}

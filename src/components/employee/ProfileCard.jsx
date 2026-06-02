@@ -4,18 +4,18 @@ import { Sparkles } from "lucide-react";
 export default function ProfileCard({ employee, onEdit }) {
   // Read workspace mock subscription state and listen for live updates from Admin panel
   const [subTier, setSubTier] = useState(() => {
-    return localStorage.getItem("trackly_mock_workspace_subscription_tier") || employee.subscriptionTier || "free";
+    return localStorage.getItem("vynora_mock_workspace_subscription_tier") || employee.subscriptionTier || "free";
   });
 
   useEffect(() => {
     const handleSubChange = () => {
-      setSubTier(localStorage.getItem("trackly_mock_workspace_subscription_tier") || "free");
+      setSubTier(localStorage.getItem("vynora_mock_workspace_subscription_tier") || "free");
     };
     
     // Listen to changes dispatched by WorkspaceCard mock updates
-    window.addEventListener("trackly_workspace_subscription_changed", handleSubChange);
+    window.addEventListener("vynora_workspace_subscription_changed", handleSubChange);
     return () => {
-      window.removeEventListener("trackly_workspace_subscription_changed", handleSubChange);
+      window.removeEventListener("vynora_workspace_subscription_changed", handleSubChange);
     };
   }, []);
 

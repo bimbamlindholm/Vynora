@@ -1,5 +1,5 @@
 /**
- * Trackly V3 AI Face Verification Engine
+ * Vynora V3 AI Face Verification Engine
  * Optimized client-side pattern matching algorithm using HTML5 Canvas pixel analysis.
  * Analyzes greyscale structural intensity (L1 norm) and average color distribution to prevent buddy-punching.
  */

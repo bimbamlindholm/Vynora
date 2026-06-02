@@ -46,6 +46,7 @@ import { fetchMySchedules, saveSchedule, deleteSchedule } from "../utils/supabas
 import { calculateNightDifferentialMinutes } from "../utils/payrollCalculator";
 import HelpSystem from "../components/HelpSystem";
 import SkeletonLoader from "../components/SkeletonLoader";
+import { setLocalMedia, getLocalMedia, removeLocalMedia } from "../utils/vynoraStorage";
 
 // Modular Personal Portal Sub-components
 import PersonalHeader from "../components/personal/PersonalHeader";
@@ -268,7 +269,7 @@ const PERSONAL_TABS = new Set([
 ]);
 
 function getSavedPersonalTab(profileId) {
-  const key = profileId ? `trackly_personal_active_tab_${profileId}` : "trackly_personal_active_tab";
+  const key = profileId ? `vynora_personal_active_tab_${profileId}` : "vynora_personal_active_tab";
   const savedTab = safeLocalStorage.getItem(key);
   return PERSONAL_TABS.has(savedTab) ? savedTab : "dashboard";
 }
@@ -310,12 +311,18 @@ function PersonalDashboardPage() {
 
   const handleRegisterFace = async (base64Photo) => {
     try {
-      safeLocalStorage.setItem(`trackly_local_face_photo_${profile.id}`, base64Photo);
-      await updateProfile({ ...profile, face_photo: base64Photo });
+      VynoraDeveloperLogger.log("Biometric", "Saving heavy base64 biometric face photo directly into user's local mobile storage (IndexedDB)...");
+      await setLocalMedia(`vynora_local_face_photo_${profile.id}`, base64Photo);
+      setLocalFacePhoto(base64Photo); // Update local active state instantly!
+
+      // Do NOT send the heavy base64Photo string to the remote database to consume 0 bytes of system server storage!
+      // Instead, we mark it as "locally_stored" on the remote database profile, indicating biometric setup completed.
+      await updateProfile({ ...profile, face_photo: "locally_stored" });
       await refreshSessionData();
       addToast("AI Face Profile registered successfully!", "success");
       setModal(null);
     } catch (err) {
+      VynoraDeveloperLogger.log("Biometric", "Biometric remote flag sync failed, local device IndexedDB remains active.", err, "warn");
       console.warn("Failed to sync face profile, local storage fallback:", err);
       addToast("Face registered locally (Offline fallback)!", "success");
       setModal(null);
@@ -335,7 +342,7 @@ function PersonalDashboardPage() {
   // Restore user-specific saved tab once profile loads
   useEffect(() => {
     if (profile && profile.id) {
-      const savedTab = safeLocalStorage.getItem(`trackly_personal_active_tab_${profile.id}`);
+      const savedTab = safeLocalStorage.getItem(`vynora_personal_active_tab_${profile.id}`);
       if (PERSONAL_TABS.has(savedTab)) {
         setActiveTab(savedTab);
       }
@@ -344,12 +351,12 @@ function PersonalDashboardPage() {
 
   // Interactive Demo Subscription State
   const [subscriptionTier, setSubscriptionTier] = useState(() => {
-    return safeLocalStorage.getItem("trackly_mock_subscription_tier") || profile?.subscription_tier || "free";
+    return safeLocalStorage.getItem("vynora_mock_subscription_tier") || profile?.subscription_tier || "free";
   });
 
   useEffect(() => {
     if (profile?.subscription_tier) {
-      const savedMock = safeLocalStorage.getItem("trackly_mock_subscription_tier");
+      const savedMock = safeLocalStorage.getItem("vynora_mock_subscription_tier");
       if (!savedMock) {
         setSubscriptionTier(profile.subscription_tier);
       }
@@ -359,9 +366,9 @@ function PersonalDashboardPage() {
   // Save active tab to localStorage (both global and user-specific)
   useEffect(() => {
     if (PERSONAL_TABS.has(activeTab)) {
-      safeLocalStorage.setItem("trackly_personal_active_tab", activeTab);
+      safeLocalStorage.setItem("vynora_personal_active_tab", activeTab);
       if (profile && profile.id) {
-        safeLocalStorage.setItem(`trackly_personal_active_tab_${profile.id}`, activeTab);
+        safeLocalStorage.setItem(`vynora_personal_active_tab_${profile.id}`, activeTab);
       }
     }
   }, [activeTab, profile]);
@@ -381,6 +388,18 @@ function PersonalDashboardPage() {
     facePhoto: "",
   });
   const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [localFacePhoto, setLocalFacePhoto] = useState("");
+
+  // Load heavy facial biometric photo reference asynchronously from local IndexedDB mobile storage
+  useEffect(() => {
+    async function loadBiometricReference() {
+      if (profile && profile.id) {
+        const cachedPhoto = await getLocalMedia(`vynora_local_face_photo_${profile.id}`);
+        setLocalFacePhoto(cachedPhoto);
+      }
+    }
+    loadBiometricReference();
+  }, [profile]);
 
   // Hydrate profile form when profile details are available
   useEffect(() => {
@@ -452,7 +471,7 @@ function PersonalDashboardPage() {
   // Load processed payslips history from localStorage
   useEffect(() => {
     if (user?.id) {
-      const saved = safeLocalStorage.getItem(`trackly_processed_payslips_${user.id}`);
+      const saved = safeLocalStorage.getItem(`vynora_processed_payslips_${user.id}`);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -509,7 +528,7 @@ function PersonalDashboardPage() {
 
     const updatedList = [newSlip, ...processedPayslips];
     setProcessedPayslips(updatedList);
-    safeLocalStorage.setItem(`trackly_processed_payslips_${user.id}`, JSON.stringify(updatedList));
+    safeLocalStorage.setItem(`vynora_processed_payslips_${user.id}`, JSON.stringify(updatedList));
 
     addToast("Deductions applied successfully! Processed payslip recorded below.", "success");
   };
@@ -517,7 +536,7 @@ function PersonalDashboardPage() {
   const handleClearProcessedHistory = () => {
     if (window.confirm("Are you sure you want to clear your entire processed payslip history?")) {
       setProcessedPayslips([]);
-      safeLocalStorage.removeItem(`trackly_processed_payslips_${user.id}`);
+      safeLocalStorage.removeItem(`vynora_processed_payslips_${user.id}`);
       addToast("Processed history cleared successfully.", "info");
     }
   };
@@ -583,7 +602,7 @@ function PersonalDashboardPage() {
           <div class="container">
             <div class="header">
               <div>
-                <div class="logo-text">TRACKLY</div>
+                <div class="logo-text">VYNORA</div>
                 <div style="font-size: 10px; color: #10B981; font-weight: bold; letter-spacing: 0.1em;">PERSONAL PAYROLL RECORD</div>
               </div>
               <div>
@@ -727,7 +746,7 @@ function PersonalDashboardPage() {
 
   useEffect(() => {
     if (user?.id) {
-      const saved = safeLocalStorage.getItem(`trackly_personal_diary_${user.id}`);
+      const saved = safeLocalStorage.getItem(`vynora_personal_diary_${user.id}`);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -753,7 +772,7 @@ function PersonalDashboardPage() {
       updated[dateStr] = text;
     }
     setDiaryNotes(updated);
-    safeLocalStorage.setItem(`trackly_personal_diary_${user.id}`, JSON.stringify(updated));
+    safeLocalStorage.setItem(`vynora_personal_diary_${user.id}`, JSON.stringify(updated));
     addToast("Diary entry saved successfully!", "success");
     setShowDiaryModal(false);
   };
@@ -845,13 +864,13 @@ function PersonalDashboardPage() {
   // Restore onboarding step & form once profile loads
   useEffect(() => {
     if (profile && profile.id) {
-      const onboarded = safeLocalStorage.getItem(`trackly_onboarded_${profile.id}`);
+      const onboarded = safeLocalStorage.getItem(`vynora_onboarded_${profile.id}`);
       if (!onboarded) {
         VynoraDeveloperLogger.log("Onboarding", "New user detected! Initializing profile setup wizard dialog.", { profileId: profile.id });
         setShowOnboarding(true);
         
         // 1. Restore step
-        const savedStep = safeLocalStorage.getItem(`trackly_onboarding_step_${profile.id}`);
+        const savedStep = safeLocalStorage.getItem(`vynora_onboarding_step_${profile.id}`);
         if (savedStep) {
           const stepNum = parseInt(savedStep, 10);
           if (stepNum >= 1 && stepNum <= 4) {
@@ -861,7 +880,7 @@ function PersonalDashboardPage() {
         }
         
         // 2. Restore form fields
-        const savedForm = safeLocalStorage.getItem(`trackly_onboarding_form_${profile.id}`);
+        const savedForm = safeLocalStorage.getItem(`vynora_onboarding_form_${profile.id}`);
         let parsedForm = {};
         if (savedForm) {
           try {
@@ -890,13 +909,13 @@ function PersonalDashboardPage() {
   // Persist onboarding step & form on changes
   useEffect(() => {
     if (profile && profile.id && showOnboarding) {
-      safeLocalStorage.setItem(`trackly_onboarding_step_${profile.id}`, onboardingStep.toString());
+      safeLocalStorage.setItem(`vynora_onboarding_step_${profile.id}`, onboardingStep.toString());
     }
   }, [onboardingStep, profile, showOnboarding]);
 
   useEffect(() => {
     if (profile && profile.id && showOnboarding) {
-      safeLocalStorage.setItem(`trackly_onboarding_form_${profile.id}`, JSON.stringify(onboardingForm));
+      safeLocalStorage.setItem(`vynora_onboarding_form_${profile.id}`, JSON.stringify(onboardingForm));
     }
   }, [onboardingForm, profile, showOnboarding]);
 
@@ -928,15 +947,15 @@ function PersonalDashboardPage() {
       await refreshSessionData();
 
       // Save the onboarded flags
-      safeLocalStorage.setItem(`trackly_onboarded_${profile.id}`, "true");
-      safeLocalStorage.setItem(`trackly_discovery_${profile.id}`, onboardingForm.discoverySource);
-      safeLocalStorage.setItem(`trackly_purpose_${profile.id}`, onboardingForm.purpose);
-      safeLocalStorage.setItem(`trackly_employment_${profile.id}`, onboardingForm.employmentStatus);
-      safeLocalStorage.setItem(`trackly_age_${profile.id}`, onboardingForm.age);
+      safeLocalStorage.setItem(`vynora_onboarded_${profile.id}`, "true");
+      safeLocalStorage.setItem(`vynora_discovery_${profile.id}`, onboardingForm.discoverySource);
+      safeLocalStorage.setItem(`vynora_purpose_${profile.id}`, onboardingForm.purpose);
+      safeLocalStorage.setItem(`vynora_employment_${profile.id}`, onboardingForm.employmentStatus);
+      safeLocalStorage.setItem(`vynora_age_${profile.id}`, onboardingForm.age);
 
       // Clean up onboarding temporary states
-      safeLocalStorage.removeItem(`trackly_onboarding_step_${profile.id}`);
-      safeLocalStorage.removeItem(`trackly_onboarding_form_${profile.id}`);
+      safeLocalStorage.removeItem(`vynora_onboarding_step_${profile.id}`);
+      safeLocalStorage.removeItem(`vynora_onboarding_form_${profile.id}`);
 
       VynoraDeveloperLogger.log("Onboarding", "Onboarding completed successfully. Workspace launched!", { profileId: profile.id });
       addToast("Setup complete! Welcome to Vynora.", "success");
@@ -1223,7 +1242,7 @@ function PersonalDashboardPage() {
     }
 
     // Load from cache first for instant hydration
-    const cacheKey = `trackly_records_cache_${user.id}`;
+    const cacheKey = `vynora_records_cache_${user.id}`;
     const cached = safeLocalStorage.getItem(cacheKey);
     if (cached) {
       try {
@@ -1274,7 +1293,7 @@ function PersonalDashboardPage() {
     if (!workspace?.id || !user?.id) return;
 
     // Load from cache first
-    const cacheKey = `trackly_schedules_cache_${user.id}`;
+    const cacheKey = `vynora_schedules_cache_${user.id}`;
     const cached = safeLocalStorage.getItem(cacheKey);
     if (cached) {
       try {
@@ -1308,7 +1327,7 @@ function PersonalDashboardPage() {
   const syncOfflineQueue = async () => {
     if (!navigator.onLine || !workspace?.id || !user?.id || !supabase) return;
 
-    const queueKey = `trackly_offline_queue_${user.id}`;
+    const queueKey = `vynora_offline_queue_${user.id}`;
     const rawQueue = safeLocalStorage.getItem(queueKey);
     if (!rawQueue) return;
 
@@ -1405,8 +1424,8 @@ function PersonalDashboardPage() {
   // ==========================================
   useEffect(() => {
     if (workspace) {
-      const localHolidayOt = safeLocalStorage.getItem(`trackly_personal_holiday_ot_rate_${user?.id}`);
-      const localNightDiff = safeLocalStorage.getItem(`trackly_personal_night_diff_rate_${user?.id}`);
+      const localHolidayOt = safeLocalStorage.getItem(`vynora_personal_holiday_ot_rate_${user?.id}`);
+      const localNightDiff = safeLocalStorage.getItem(`vynora_personal_night_diff_rate_${user?.id}`);
 
       // 1. Load base workspace settings
       let baseRules = {
@@ -1455,10 +1474,10 @@ function PersonalDashboardPage() {
 
     if (user?.id) {
       // Clean cached DTR logs and old offline queues to completely clear timezone conflicts
-      safeLocalStorage.removeItem(`trackly_records_cache_${user.id}`);
-      safeLocalStorage.removeItem(`trackly_offline_queue_${user.id}`);
+      safeLocalStorage.removeItem(`vynora_records_cache_${user.id}`);
+      safeLocalStorage.removeItem(`vynora_offline_queue_${user.id}`);
       
-      const savedGoals = safeLocalStorage.getItem(`trackly_personal_goals_${user.id}`);
+      const savedGoals = safeLocalStorage.getItem(`vynora_personal_goals_${user.id}`);
       if (savedGoals) {
         try {
           const parsed = JSON.parse(savedGoals);
@@ -1995,7 +2014,8 @@ function PersonalDashboardPage() {
 
     // Intercept with Face Verification if active for employees
     if (role === "employee" && permissions?.faceVerification && (actionType === "time_in" || actionType === "time_out")) {
-      const facePhoto = profile?.face_photo || safeLocalStorage.getItem(`trackly_local_face_photo_${profile.id}`) || "";
+      const cachedBiometricPhoto = await getLocalMedia(`vynora_local_face_photo_${profile.id}`);
+      const facePhoto = (profile?.face_photo && profile.face_photo !== "locally_stored" ? profile.face_photo : "") || cachedBiometricPhoto || "";
       if (!facePhoto) {
         VynoraDeveloperLogger.log("Attendance", "Clock action blocked: Employee has not registered a facial biometric reference profile.", null, "warn");
         addToast("Kailangang mag-enroll ng Face Profile bago makapag-Time In/Out.", "warning");
@@ -2044,7 +2064,7 @@ function PersonalDashboardPage() {
         };
         const updatedRecords = [...rawRecords, mockRecord];
         setRawRecords(updatedRecords);
-        safeLocalStorage.setItem(`trackly_records_cache_${user.id}`, JSON.stringify(updatedRecords));
+        safeLocalStorage.setItem(`vynora_records_cache_${user.id}`, JSON.stringify(updatedRecords));
 
         // Trigger Ephemeral Selfie DTR Proof display on dashboard
         if (verificationPhoto) {
@@ -2053,7 +2073,7 @@ function PersonalDashboardPage() {
         }
 
         // Queue in offline queue
-        const queueKey = `trackly_offline_queue_${user.id}`;
+        const queueKey = `vynora_offline_queue_${user.id}`;
         const rawQueue = safeLocalStorage.getItem(queueKey);
         const queue = rawQueue ? JSON.parse(rawQueue) : [];
         queue.push({
@@ -2197,10 +2217,10 @@ function PersonalDashboardPage() {
         // Optimistic UI update: Filter out old records of this date, add new ones
         const updatedRecords = rawRecords.filter(r => r.date !== baseDate).concat(eventsToInsert);
         setRawRecords(updatedRecords);
-        safeLocalStorage.setItem(`trackly_records_cache_${user.id}`, JSON.stringify(updatedRecords));
+        safeLocalStorage.setItem(`vynora_records_cache_${user.id}`, JSON.stringify(updatedRecords));
 
         // Queue offline operation
-        const queueKey = `trackly_offline_queue_${user.id}`;
+        const queueKey = `vynora_offline_queue_${user.id}`;
         const rawQueue = safeLocalStorage.getItem(queueKey);
         const queue = rawQueue ? JSON.parse(rawQueue) : [];
         queue.push({
@@ -2241,7 +2261,7 @@ function PersonalDashboardPage() {
       setShowAddModal(false);
       
       // Wipe cache to force reload fresh DTR data
-      safeLocalStorage.removeItem(`trackly_records_cache_${user.id}`);
+      safeLocalStorage.removeItem(`vynora_records_cache_${user.id}`);
       console.log("SUCCESSFULLY SAVED MANUAL DTR WITH TIMEZONE-AWARE RESOLUTION!");
       
       await fetchRecords();
@@ -2365,10 +2385,10 @@ function PersonalDashboardPage() {
         // Optimistic UI update: Filter out old records of this date, add new ones
         const updatedRecords = rawRecords.filter(r => r.date !== baseDate).concat(eventsToInsert);
         setRawRecords(updatedRecords);
-        safeLocalStorage.setItem(`trackly_records_cache_${user.id}`, JSON.stringify(updatedRecords));
+        safeLocalStorage.setItem(`vynora_records_cache_${user.id}`, JSON.stringify(updatedRecords));
 
         // Queue offline operation
-        const queueKey = `trackly_offline_queue_${user.id}`;
+        const queueKey = `vynora_offline_queue_${user.id}`;
         const rawQueue = safeLocalStorage.getItem(queueKey);
         const queue = rawQueue ? JSON.parse(rawQueue) : [];
         queue.push({
@@ -2411,8 +2431,8 @@ function PersonalDashboardPage() {
       setShowEditModal(false);
       
       // Wipe cache and offline queue on edit success to force fresh data load
-      safeLocalStorage.removeItem(`trackly_records_cache_${user.id}`);
-      safeLocalStorage.removeItem(`trackly_offline_queue_${user.id}`);
+      safeLocalStorage.removeItem(`vynora_records_cache_${user.id}`);
+      safeLocalStorage.removeItem(`vynora_offline_queue_${user.id}`);
       console.log("SUCCESSFULLY UPDATED DTR CORRECTION WITH TIMEZONE-AWARE RESOLUTION!");
       
       await fetchRecords();
@@ -2439,10 +2459,10 @@ function PersonalDashboardPage() {
         // Optimistic UI: Filter out records for this date
         const updatedRecords = rawRecords.filter(r => r.date !== dateKey);
         setRawRecords(updatedRecords);
-        safeLocalStorage.setItem(`trackly_records_cache_${user.id}`, JSON.stringify(updatedRecords));
+        safeLocalStorage.setItem(`vynora_records_cache_${user.id}`, JSON.stringify(updatedRecords));
 
         // Queue delete operation
-        const queueKey = `trackly_offline_queue_${user.id}`;
+        const queueKey = `vynora_offline_queue_${user.id}`;
         const rawQueue = safeLocalStorage.getItem(queueKey);
         const queue = rawQueue ? JSON.parse(rawQueue) : [];
         queue.push({
@@ -2497,10 +2517,10 @@ function PersonalDashboardPage() {
         VynoraDeveloperLogger.log("DTR Correction", "Offline status detected during absolute DTR wipe. Wiping locally...", null, "warn");
         // Optimistic UI: Clear all records
         setRawRecords([]);
-        safeLocalStorage.setItem(`trackly_records_cache_${user.id}`, JSON.stringify([]));
+        safeLocalStorage.setItem(`vynora_records_cache_${user.id}`, JSON.stringify([]));
 
         // Clear entire pending offline queue first because everything is wiped anyway
-        const queueKey = `trackly_offline_queue_${user.id}`;
+        const queueKey = `vynora_offline_queue_${user.id}`;
         const queue = [{
           id: `q_${Date.now()}`,
           type: "delete_all"
@@ -2530,8 +2550,8 @@ function PersonalDashboardPage() {
       setDeleteConfirmText("");
 
       // Also clear local cache & queue to ensure sync state
-      safeLocalStorage.setItem(`trackly_records_cache_${user.id}`, JSON.stringify([]));
-      safeLocalStorage.removeItem(`trackly_offline_queue_${user.id}`);
+      safeLocalStorage.setItem(`vynora_records_cache_${user.id}`, JSON.stringify([]));
+      safeLocalStorage.removeItem(`vynora_offline_queue_${user.id}`);
 
       await fetchRecords();
     } catch (err) {
@@ -2585,9 +2605,9 @@ function PersonalDashboardPage() {
 
       VynoraDeveloperLogger.log("Settings", "Saving goals and rates into local storage cache...", { goals });
       // Save Goals & Custom Rates
-      safeLocalStorage.setItem(`trackly_personal_goals_${user.id}`, JSON.stringify(goals));
-      safeLocalStorage.setItem(`trackly_personal_holiday_ot_rate_${user.id}`, settings.holidayOvertimeRate);
-      safeLocalStorage.setItem(`trackly_personal_night_diff_rate_${user.id}`, settings.nightDiffRate);
+      safeLocalStorage.setItem(`vynora_personal_goals_${user.id}`, JSON.stringify(goals));
+      safeLocalStorage.setItem(`vynora_personal_holiday_ot_rate_${user.id}`, settings.holidayOvertimeRate);
+      safeLocalStorage.setItem(`vynora_personal_night_diff_rate_${user.id}`, settings.nightDiffRate);
 
       VynoraDeveloperLogger.log("Settings", "Settings saved successfully! Reloading portal to re-hydrate state context.");
       addToast("Personal Settings saved successfully!", "success");
@@ -2647,7 +2667,7 @@ function PersonalDashboardPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Trackly_${isEmp ? 'Employee' : 'Personal'}_DTR_Export_${getLocalDateString()}.csv`);
+    link.setAttribute("download", `Vynora_${isEmp ? 'Employee' : 'Personal'}_DTR_Export_${getLocalDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -2688,7 +2708,7 @@ function PersonalDashboardPage() {
           </style>
         </head>
         <body>
-          <h2 style="margin-bottom: 5px; color: #059669;">Trackly - ${isEmp ? 'Employee' : 'Personal'} DTR Summary</h2>
+          <h2 style="margin-bottom: 5px; color: #059669;">Vynora - ${isEmp ? 'Employee' : 'Personal'} DTR Summary</h2>
           <p style="font-size: 14px; margin-top: 0; color: #64748B;">User: ${profile?.email || user?.email}</p>
           <hr style="border: 1px solid #E2E8F0; margin-bottom: 25px;" />
           
@@ -2782,7 +2802,7 @@ function PersonalDashboardPage() {
           <div class="container">
             <div class="header">
               <div>
-                <div class="logo-text">TRACKLY</div>
+                <div class="logo-text">VYNORA</div>
                 <div style="font-size: 10px; color: #10B981; font-weight: bold; letter-spacing: 0.1em;">PERSONAL PAYROLL RECORD</div>
               </div>
               <div>
@@ -3275,7 +3295,7 @@ function PersonalDashboardPage() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/10 text-[10px] font-black tracking-widest text-cyan-400 uppercase">
                 <Sparkles size={11} className="animate-pulse" />
-                Launch Trackly
+                Launch Vynora
               </div>
               <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
                 Welcome to Vynora, <br/>
@@ -3532,7 +3552,7 @@ function PersonalDashboardPage() {
               <div className="grid gap-4">
                 {/* Discovery Source */}
                 <label className="grid gap-2 text-xs text-slate-400 font-bold">
-                  🔍 Where did you discover Trackly/Vynora? <span className="text-rose-500">*</span>
+                  🔍 Where did you discover Vynora/Vynora? <span className="text-rose-500">*</span>
                   <select
                     value={onboardingForm.discoverySource}
                     onChange={(e) => {
@@ -3563,7 +3583,7 @@ function PersonalDashboardPage() {
 
                 {/* Purpose */}
                 <label className="grid gap-2 text-xs text-slate-400 font-bold">
-                  🎯 What is your main purpose on using Trackly? <span className="text-rose-500">*</span>
+                  🎯 What is your main purpose on using Vynora? <span className="text-rose-500">*</span>
                   <select
                     value={onboardingForm.purpose}
                     onChange={(e) => {
@@ -3586,7 +3606,7 @@ function PersonalDashboardPage() {
                   </select>
                   {validationAttempted && !onboardingForm.purpose && (
                     <span className="text-[10px] text-rose-400 font-black flex items-center gap-1 animate-pulse">
-                      ⚠️ Main Purpose is required. Pakisagot po ang layunin ng paggamit ninyo ng Trackly.
+                      ⚠️ Main Purpose is required. Pakisagot po ang layunin ng paggamit ninyo ng Vynora.
                     </span>
                   )}
                 </label>
@@ -3644,7 +3664,7 @@ function PersonalDashboardPage() {
                       return;
                     }
                     if (!onboardingForm.purpose) {
-                      setOnboardingError("Main Purpose is required. Pakisagot po ang layunin ng paggamit ninyo ng Trackly.");
+                      setOnboardingError("Main Purpose is required. Pakisagot po ang layunin ng paggamit ninyo ng Vynora.");
                       setValidationAttempted(true);
                       return;
                     }
@@ -4671,7 +4691,7 @@ function PersonalDashboardPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              safeLocalStorage.setItem("trackly_mock_subscription_tier", "pro");
+                              safeLocalStorage.setItem("vynora_mock_subscription_tier", "pro");
                               setSubscriptionTier("pro");
                               addToast("Congratulations! You have upgraded to Solo Pro (Demo Mode).", "success");
                             }}
@@ -5129,7 +5149,7 @@ function PersonalDashboardPage() {
             employee={{
               id: profile?.id || "",
               fullName: profile?.full_name || "Employee",
-              facePhoto: profile?.face_photo || safeLocalStorage.getItem(`trackly_local_face_photo_${profile.id}`) || "",
+              facePhoto: (profile?.face_photo && profile.face_photo !== "locally_stored" ? profile.face_photo : "") || localFacePhoto || "",
             }}
             enabledTimeButtons={[
               { label: pendingAction === "time_in" ? "Time In" : "Time Out", field: pendingAction }
@@ -5190,7 +5210,7 @@ function PersonalDashboardPage() {
                 onClick={() => {
                   const link = document.createElement("a");
                   link.href = ephemeralSelfie;
-                  link.download = `Trackly_DTR_Proof_${ephemeralActionName.replace(" ", "_")}_${new Date().toISOString().slice(0, 10)}.jpg`;
+                  link.download = `Vynora_DTR_Proof_${ephemeralActionName.replace(" ", "_")}_${new Date().toISOString().slice(0, 10)}.jpg`;
                   document.body.appendChild(link);
                   link.click();
                   document.body.removeChild(link);

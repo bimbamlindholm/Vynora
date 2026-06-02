@@ -1,4 +1,4 @@
-const CACHE_NAME = "trackly-v3-cache-v1";
+const CACHE_NAME = "vynora-cache-v1";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",

@@ -250,8 +250,8 @@ export default function HelpSystem({ role = "employee" }) {
 
   const tourSteps = [
     {
-      title: "Welcome to Trackly V3!",
-      text: "Trackly V3 is a premium workspace tracking suite designed for automated, secure, and transparent attendance and payroll.",
+      title: "Welcome to Vynora V3!",
+      text: "Vynora V3 is a premium workspace tracking suite designed for automated, secure, and transparent attendance and payroll.",
       icon: "🚀"
     },
     {
@@ -307,7 +307,7 @@ export default function HelpSystem({ role = "employee" }) {
                     <BookOpen size={16} />
                   </div>
                   <div>
-                    <h3 className="font-black text-white text-base">Trackly V3 Helper</h3>
+                    <h3 className="font-black text-white text-base">Vynora V3 Helper</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Context: {role.toUpperCase()}</p>
                   </div>
                 </div>
@@ -327,7 +327,7 @@ export default function HelpSystem({ role = "employee" }) {
                   <div className="relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 shadow-inner">
                     <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-cyan-400/10 blur-xl"></div>
                     <span className="text-2xl">✨</span>
-                    <h4 className="mt-2 text-sm font-black text-white">New to Trackly V3?</h4>
+                    <h4 className="mt-2 text-sm font-black text-white">New to Vynora V3?</h4>
                     <p className="mt-1 text-xs text-slate-300 leading-relaxed">
                       Take our interactive quick tour to learn the core upgrades in DTR, schedules, and payroll.
                     </p>
@@ -434,7 +434,7 @@ export default function HelpSystem({ role = "employee" }) {
 
             {/* Footer */}
             <div className="border-t border-white/10 pt-4 mt-6 flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-              <span>Trackly V3 Helper &bull; Active</span>
+              <span>Vynora V3 Helper &bull; Active</span>
               <span>v3.2.0</span>
             </div>
           </div>

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Calendar, Activity, Download, ChevronLeft, ChevronRight, UserRound, ShieldCheck, X } from "lucide-react";
-import { exportCsv } from "../../utils/tracklyStorage";
+import { exportCsv } from "../../utils/vynoraStorage";
 import { buildAttendanceCsvRows, todayKey } from "../../utils/supabaseAttendance";
 import { RecordFact } from "./employeeComponents";
 
 export default function RecordsSection({ onCorrection, permissions, records, onSelectDetail }) {
   const [viewMode, setViewMode] = useState("calendar");
-  const download = () => exportCsv("my-trackly-attendance.csv", buildAttendanceCsvRows(records));
+  const download = () => exportCsv("my-vynora-attendance.csv", buildAttendanceCsvRows(records));
 
   return (
     <section className="glass-panel min-w-0 rounded-2xl p-4 sm:p-6 bg-gradient-to-br from-slate-900/60 via-slate-950/40 to-slate-900/60 border border-white/10 shadow-xl">

@@ -35,7 +35,7 @@ function RegisterHero() {
       </h1>
 
       <p className="mt-7 max-w-xl text-base leading-8 text-slate-300 sm:text-lg">
-        Join Trackly and experience a smarter way to track attendance, manage work hours, and boost your productivity.
+        Join Vynora and experience a smarter way to track attendance, manage work hours, and boost your productivity.
       </p>
 
       <div className="mt-10 grid gap-7">

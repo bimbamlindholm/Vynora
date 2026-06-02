@@ -541,7 +541,7 @@ export function AuthProvider({ children }) {
 
       if (!loadedRole) {
         await client.auth.signOut();
-        throw new Error("This account does not have a Trackly profile yet.");
+        throw new Error("This account does not have a Vynora profile yet.");
       }
 
       // Flexible Role Validation:
@@ -681,11 +681,11 @@ export function AuthProvider({ children }) {
     const client = requireSupabase();
     setLoading(true);
     try {
-      localStorage.setItem("trackly_oauth_pending_role", expectedRole);
+      localStorage.setItem("vynora_oauth_pending_role", expectedRole);
       if (workspaceCode) {
-        localStorage.setItem("trackly_oauth_pending_workspace", workspaceCode.trim().toUpperCase());
+        localStorage.setItem("vynora_oauth_pending_workspace", workspaceCode.trim().toUpperCase());
       } else {
-        localStorage.removeItem("trackly_oauth_pending_workspace");
+        localStorage.removeItem("vynora_oauth_pending_workspace");
       }
 
       const { error } = await client.auth.signInWithOAuth({
@@ -728,11 +728,11 @@ export function AuthProvider({ children }) {
     const client = requireSupabase();
     setLoading(true);
     try {
-      localStorage.setItem("trackly_oauth_pending_role", expectedRole);
+      localStorage.setItem("vynora_oauth_pending_role", expectedRole);
       if (workspaceCode) {
-        localStorage.setItem("trackly_oauth_pending_workspace", workspaceCode.trim().toUpperCase());
+        localStorage.setItem("vynora_oauth_pending_workspace", workspaceCode.trim().toUpperCase());
       } else {
-        localStorage.removeItem("trackly_oauth_pending_workspace");
+        localStorage.removeItem("vynora_oauth_pending_workspace");
       }
 
       const { error } = await client.auth.signInWithOAuth({
@@ -845,8 +845,8 @@ export function AuthProvider({ children }) {
 
       await hydrateUser(user);
 
-      localStorage.removeItem("trackly_oauth_pending_role");
-      localStorage.removeItem("trackly_oauth_pending_workspace");
+      localStorage.removeItem("vynora_oauth_pending_role");
+      localStorage.removeItem("vynora_oauth_pending_workspace");
 
       return getRedirectPathByRole(role);
     } finally {
@@ -916,7 +916,7 @@ export function AuthProvider({ children }) {
         role: "personal",
       });
 
-      localStorage.removeItem("trackly_active_workspace_id");
+      localStorage.removeItem("vynora_active_workspace_id");
       await hydrateUser(user);
     } finally {
       setLoading(false);
@@ -961,7 +961,7 @@ export function AuthProvider({ children }) {
 
       if (permissionsError) throw permissionsError;
 
-      localStorage.setItem("trackly_active_workspace_id", workspaceId);
+      localStorage.setItem("vynora_active_workspace_id", workspaceId);
       
       setWorkspace(memberData.workspace);
       setMembership(memberData);

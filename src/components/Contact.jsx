@@ -174,7 +174,7 @@ function Contact() {
 
       {/* Landing footer */}
       <footer className="mt-24 border-t border-white/5 pt-8 text-center text-xs leading-6 text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p>© 2026 Trackly. Built in the Philippines. All rights reserved.</p>
+        <p>© 2026 Vynora. Built in the Philippines. All rights reserved.</p>
         <div className="flex items-center gap-6">
           <a href="/terms" className="font-semibold text-slate-400 hover:text-cyan-300 transition">Terms of Service</a>
           <a href="/privacy" className="font-semibold text-slate-400 hover:text-violet-300 transition">Privacy Policy</a>

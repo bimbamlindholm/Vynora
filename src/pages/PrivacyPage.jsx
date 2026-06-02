@@ -38,7 +38,7 @@ export default function PrivacyPage() {
               <section>
                 <h2 className="text-xl font-bold text-white mb-3">1. Introduction & Scope</h2>
                 <p>
-                  At Trackly V3, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, store, process, and safeguard your personal information when you register an account, utilize Google OAuth login, or use our timekeeping, DTR, and HRIS tools.
+                  At Vynora V3, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, store, process, and safeguard your personal information when you register an account, utilize Google OAuth login, or use our timekeeping, DTR, and HRIS tools.
                 </p>
               </section>
 
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
               <section>
                 <h2 className="text-xl font-bold text-white mb-3">3. How We Use Your Information</h2>
                 <p>
-                  Trackly V3 utilizes the collected metrics only to provide core features: validating shift timings, compiling payroll hours, checking statutory configurations for admins, and ensuring secure authentication. Your data is never sold, traded, or used for third-party targeted marketing.
+                  Vynora V3 utilizes the collected metrics only to provide core features: validating shift timings, compiling payroll hours, checking statutory configurations for admins, and ensuring secure authentication. Your data is never sold, traded, or used for third-party targeted marketing.
                 </p>
               </section>
 
@@ -81,14 +81,14 @@ export default function PrivacyPage() {
               <section>
                 <h2 className="text-xl font-bold text-white mb-3">6. Cookies & Local Storage</h2>
                 <p>
-                  Trackly V3 uses standard local storage and session tokens strictly to keep you authenticated, retain theme preferences, and maintain active Supabase sessions. We do not use tracking cookies.
+                  Vynora V3 uses standard local storage and session tokens strictly to keep you authenticated, retain theme preferences, and maintain active Supabase sessions. We do not use tracking cookies.
                 </p>
               </section>
 
               <section className="pt-6 border-t border-white/5 flex items-center gap-3">
                 <ShieldCheck className="text-cyan-400 shrink-0" size={24} />
                 <p className="text-xs text-slate-400">
-                  We maintain strict physical, technical, and organizational measures to ensure your data stays private and compliant. For inquiries, contact support@trackly.com.
+                  We maintain strict physical, technical, and organizational measures to ensure your data stays private and compliant. For inquiries, contact support@vynora.com.
                 </p>
               </section>
             </div>

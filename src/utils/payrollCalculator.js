@@ -115,7 +115,7 @@ export function calculateEmployeePayroll({
   let employeeRules = { ...rules };
   if (typeof window !== "undefined" && rules?.id && employee?.id) {
     try {
-      const rawPresets = localStorage.getItem(`trackly_custom_rules_presets_${rules.id}`);
+      const rawPresets = localStorage.getItem(`vynora_custom_rules_presets_${rules.id}`);
       if (rawPresets) {
         const presets = JSON.parse(rawPresets);
         const activePreset = presets.find(p => p.targetEmployeeIds && p.targetEmployeeIds.includes(employee.id));
