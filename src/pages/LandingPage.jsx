@@ -1,15 +1,46 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, getRedirectPathByRole } from "../contexts/AuthContext";
 import VynoraNavbar from "../components/vynora/VynoraNavbar";
 import VynoraFooter from "../components/vynora/VynoraFooter";
 import PageTransition from "../components/PageTransition";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { Sparkles, Shield, Clock, BarChart3, CloudLightning, ArrowRight, Download } from "lucide-react";
+import { Sparkles, Shield, Clock, BarChart3, CloudLightning, ArrowRight, Download, Laptop, Smartphone, X } from "lucide-react";
 
 export default function LandingPage() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setIsInstallable(false);
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowInstallModal(true);
+    }
+  };
 
   useEffect(() => {
     if (!loading && user) {
@@ -72,17 +103,17 @@ export default function LandingPage() {
                   Get Started for Free
                   <ArrowRight size={13} />
                 </Link>
-                <a
-                  href="/vynora.apk"
-                  download="Vynora.apk"
-                  className="inline-flex h-12 items-center justify-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:border-emerald-400/60 hover:bg-emerald-400/20 hover:text-emerald-200 px-6 text-xs font-black uppercase tracking-wider text-emerald-300 transition hover:scale-[1.02] active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.15)] cursor-pointer"
+                <button
+                  type="button"
+                  onClick={handleInstallClick}
+                  className="inline-flex h-12 items-center justify-center gap-2.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:border-cyan-400/60 hover:bg-cyan-400/20 hover:text-cyan-200 px-6 text-xs font-black uppercase tracking-wider text-cyan-300 transition hover:scale-[1.02] active:scale-95 shadow-[0_0_15px_rgba(6,182,212,0.15)] cursor-pointer"
                 >
-                  <Download size={14} className="text-emerald-400" />
-                  Download Vynora App (.APK)
-                </a>
+                  <Smartphone size={14} className="text-cyan-400" />
+                  {isInstallable ? "Install Vynora App (PWA)" : "Download Vynora App (PWA)"}
+                </button>
               </div>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none pt-1">
-                🤖 Native Android App: <span className="text-emerald-400 font-extrabold">12.8 MB</span> • Build v1.0.4 • Off-store direct side-load installer
+                🌐 Standalone Web App • Offline Capabilities • Zero device megabytes footprint
               </p>
             </div>
 
@@ -309,6 +340,84 @@ export default function LandingPage() {
 
         {/* 4. Compact Footer */}
         <VynoraFooter />
+
+        {/* PWA Guidance Modal */}
+        <AnimatePresence>
+          {showInstallModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="glass-panel relative w-full max-w-[500px] rounded-[2rem] border-cyan-500/30 bg-[#07111F]/95 p-6 text-left shadow-[0_0_80px_rgba(6,182,212,0.3)] sm:p-8 overflow-hidden"
+              >
+                <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl" />
+                <div className="absolute -left-16 -bottom-16 h-40 w-40 rounded-full bg-purple-500/10 blur-3xl" />
+
+                <button
+                  type="button"
+                  onClick={() => setShowInstallModal(false)}
+                  className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-400 to-purple-500 text-sm font-black text-white shadow-lg">
+                    V
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white">Install Vynora App (PWA)</h3>
+                    <p className="text-xs text-slate-400">Run Vynora natively on your desktop or mobile home screen</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  <div className="flex gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-cyan-500/10 text-cyan-300">
+                      <Laptop size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white uppercase tracking-wide">Desktop (Chrome, Edge, Safari)</h4>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                        Look for the <strong className="text-cyan-300">Install icon (⊕)</strong> in the top-right of your browser's address bar next to the bookmark star, and click it to download the PWA app.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-500/10 text-purple-300">
+                      <Smartphone size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white uppercase tracking-wide">Mobile Devices</h4>
+                      <ul className="mt-1.5 space-y-1.5 text-xs text-slate-400">
+                        <li className="flex items-start gap-1.5">
+                          <span className="text-purple-400">•</span>
+                          <span><strong>iOS Safari:</strong> Tap the Share button <strong className="text-white">📤</strong>, scroll down and select <strong className="text-purple-300">Add to Home Screen</strong>.</span>
+                        </li>
+                        <li className="flex items-start gap-1.5">
+                          <span className="text-purple-400">•</span>
+                          <span><strong>Android Chrome:</strong> Tap the Menu button <strong className="text-white">⋮</strong> in Chrome, then choose <strong className="text-cyan-300">Add to Home screen</strong> or <strong className="text-cyan-300">Install app</strong>.</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowInstallModal(false)}
+                    className="glow-button flex h-11 items-center justify-center rounded-xl px-6 text-xs font-bold text-white cursor-pointer"
+                  >
+                    Got It, Thanks!
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </main>
     </PageTransition>
   );
