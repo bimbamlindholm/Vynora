@@ -76,8 +76,6 @@ import AddRecordModal from "../components/personal/modals/AddRecordModal";
 import DiaryRemindersModal from "../components/personal/modals/DiaryRemindersModal";
 import CorrectionModal from "../components/employee/modals/CorrectionModal";
 import LeaveRequestModal from "../components/employee/modals/LeaveRequestModal";
-import CameraBiometricModal from "../components/employee/modals/CameraBiometricModal";
-import FaceRegistrationModal from "../components/employee/modals/FaceRegistrationModal";
 import PayslipsCard from "../components/employee/PayslipsCard";
 import EmployeePayslipModal from "../components/employee/modals/EmployeePayslipModal";
 
@@ -309,25 +307,7 @@ function PersonalDashboardPage() {
     return () => clearInterval(interval);
   }, [ephemeralSelfie]);
 
-  const handleRegisterFace = async (base64Photo) => {
-    try {
-      VynoraDeveloperLogger.log("Biometric", "Saving heavy base64 biometric face photo directly into user's local mobile storage (IndexedDB)...");
-      await setLocalMedia(`vynora_local_face_photo_${profile.id}`, base64Photo);
-      setLocalFacePhoto(base64Photo); // Update local active state instantly!
 
-      // Do NOT send the heavy base64Photo string to the remote database to consume 0 bytes of system server storage!
-      // Instead, we mark it as "locally_stored" on the remote database profile, indicating biometric setup completed.
-      await updateProfile({ ...profile, face_photo: "locally_stored" });
-      await refreshSessionData();
-      addToast("AI Face Profile registered successfully!", "success");
-      setModal(null);
-    } catch (err) {
-      VynoraDeveloperLogger.log("Biometric", "Biometric remote flag sync failed, local device IndexedDB remains active.", err, "warn");
-      console.warn("Failed to sync face profile, local storage fallback:", err);
-      addToast("Face registered locally (Offline fallback)!", "success");
-      setModal(null);
-    }
-  };
 
   // Navigation state
   const [activeTab, setActiveTab] = useState(() => getSavedPersonalTab()); // remembers selected page after refresh/tab switch
@@ -404,7 +384,6 @@ function PersonalDashboardPage() {
     companyName: "",
   });
   const [updatingProfile, setUpdatingProfile] = useState(false);
-  const [localFacePhoto, setLocalFacePhoto] = useState("");
 
   // States for manual password updates
   const [manualPassword, setManualPassword] = useState("");
@@ -506,16 +485,7 @@ function PersonalDashboardPage() {
     };
   };
 
-  // Load heavy facial biometric photo reference asynchronously from local IndexedDB mobile storage
-  useEffect(() => {
-    async function loadBiometricReference() {
-      if (profile && profile.id) {
-        const cachedPhoto = await getLocalMedia(`vynora_local_face_photo_${profile.id}`);
-        setLocalFacePhoto(cachedPhoto);
-      }
-    }
-    loadBiometricReference();
-  }, [profile]);
+
 
   // Hydrate profile form when profile details are available
   useEffect(() => {
@@ -632,8 +602,12 @@ function PersonalDashboardPage() {
       (sum, d) => sum + (Number(d.amount) || 0),
       0
     ) : 0;
+    const customAdditionsTotal = payrollAdditions.reduce(
+      (sum, a) => sum + (Number(a.amount) || 0),
+      0
+    );
     const totalDeductions = payrollSummary.latenessDeduction + customDeductionsTotal;
-    const netPay = Math.max(0, payrollSummary.totalGrossEarnings - totalDeductions);
+    const netPay = Math.max(0, payrollSummary.totalGrossEarnings + customAdditionsTotal - totalDeductions);
 
     const newSlip = {
       id: `slip_${Date.now()}`,
@@ -648,6 +622,8 @@ function PersonalDashboardPage() {
       latenessDeduction: payrollSummary.latenessDeduction,
       customDeductions: payrollDeductions.map(d => ({ name: d.name, amount: Number(d.amount) || 0 })),
       customDeductionsTotal,
+      customAdditions: payrollAdditions.map(a => ({ name: a.name, amount: Number(a.amount) || 0 })),
+      customAdditionsTotal,
       totalDeductions,
       netPay,
       processedAt: new Date().toLocaleDateString(undefined, {
@@ -663,7 +639,7 @@ function PersonalDashboardPage() {
     setProcessedPayslips(updatedList);
     safeLocalStorage.setItem(`vynora_processed_payslips_${user.id}`, JSON.stringify(updatedList));
 
-    addToast("Deductions applied successfully! Processed payslip recorded below.", "success");
+    addToast("Deductions & Additions applied successfully! Processed payslip recorded below.", "success");
   };
 
   const handleClearProcessedHistory = () => {
@@ -683,7 +659,9 @@ function PersonalDashboardPage() {
     const lateness = Number(slip.latenessDeduction) || 0;
     const customDeductionsSum = (slip.customDeductions || []).reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
     const computedTotalDeductions = lateness + customDeductionsSum;
-    const computedNetPay = Math.max(0, (slip.totalGrossEarnings || 0) - computedTotalDeductions);
+
+    const computedTotalAdditions = (slip.customAdditions || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+    const computedNetPay = Math.max(0, (slip.totalGrossEarnings || 0) + computedTotalAdditions - computedTotalDeductions);
 
     const deductionsListHTML = [
       ...(slip.latenessDeduction > 0 ? [`
@@ -692,7 +670,7 @@ function PersonalDashboardPage() {
           <td style="padding: 10px; text-align: right; color: #E11D48; font-weight: 500;">PHP ${slip.latenessDeduction.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
         </tr>
       `] : []),
-      ...slip.customDeductions.filter(d => d.name && Number(d.amount) > 0).map(d => `
+      ...(slip.customDeductions || []).filter(d => d.name && Number(d.amount) > 0).map(d => `
         <tr style="border-bottom: 1px solid #E2E8F0; font-size: 13px;">
           <td style="padding: 10px; color: #475569;">${d.name}</td>
           <td style="padding: 10px; text-align: right; color: #E11D48; font-weight: 500;">PHP ${Number(d.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -700,7 +678,17 @@ function PersonalDashboardPage() {
       `)
     ].join("");
 
-    const hasDeductions = (slip.latenessDeduction > 0) || (slip.customDeductions.some(d => d.name && Number(d.amount) > 0));
+    const additionsListHTML = [
+      ...(slip.customAdditions || []).filter(a => a.name && Number(a.amount) > 0).map(a => `
+        <tr style="border-bottom: 1px solid #E2E8F0; font-size: 13px;">
+          <td style="padding: 10px; color: #475569;">${a.name}</td>
+          <td style="padding: 10px; text-align: right; color: #10B981; font-weight: 500;">PHP ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        </tr>
+      `)
+    ].join("");
+
+    const hasDeductions = (slip.latenessDeduction > 0) || ((slip.customDeductions || []).some(d => d.name && Number(d.amount) > 0));
+    const hasAdditions = (slip.customAdditions || []).some(a => a.name && Number(a.amount) > 0);
 
     printWindow.document.write(`
       <html>
@@ -762,7 +750,7 @@ function PersonalDashboardPage() {
             <div class="table-container">
               <div>
                 <h4 style="margin: 0 0 10px 0; color: #0F172A; font-weight: 800; font-size: 14px;">Earnings Breakdown</h4>
-                <table>
+                <table style="margin-bottom: 20px;">
                   <thead>
                     <tr>
                       <th>Description</th>
@@ -789,6 +777,27 @@ function PersonalDashboardPage() {
                     <tr style="background-color: #F8FAFC; font-weight: bold; font-size: 13px;">
                       <td style="padding: 10px; color: #0F172A;">Gross Earnings</td>
                       <td style="padding: 10px; text-align: right; color: #059669;">PHP ${slip.totalGrossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <h4 style="margin: 0 0 10px 0; color: #0F172A; font-weight: 800; font-size: 14px;">Additions & Allowances</h4>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Description</th>
+                      <th class="th-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${hasAdditions ? additionsListHTML : `
+                      <tr style="border-bottom: 1px solid #E2E8F0; font-size: 13px;">
+                        <td style="padding: 10px; color: #94A3B8; italic; text-align: center;" colspan="2">No Additions Recorded</td>
+                      </tr>
+                    `}
+                    <tr style="background-color: #F8FAFC; font-weight: bold; font-size: 13px;">
+                      <td style="padding: 10px; color: #0F172A;">Total Additions</td>
+                      <td style="padding: 10px; text-align: right; color: #059669;">PHP ${computedTotalAdditions.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -821,7 +830,7 @@ function PersonalDashboardPage() {
             <div class="summary-card">
               <div>
                 <div class="summary-title">Net Take-Home Pay</div>
-                <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">Gross Pay minus Total Deductions</div>
+                <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">Gross Pay + Additions minus Total Deductions</div>
               </div>
               <div class="summary-value">PHP ${computedNetPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </div>
@@ -1212,6 +1221,29 @@ function PersonalDashboardPage() {
   const updatePayrollDeduction = (id, field, value) => {
     setPayrollDeductions(
       payrollDeductions.map(d => (d.id === id ? { ...d, [field]: value } : d))
+    );
+  };
+
+  // Payroll Additions State
+  const [payrollAdditions, setPayrollAdditions] = useState([
+    { id: "add_1", name: "Incentives", amount: "" },
+    { id: "add_2", name: "Bonus", amount: "" }
+  ]);
+
+  const addPayrollAddition = () => {
+    setPayrollAdditions([
+      ...payrollAdditions,
+      { id: `add_${Date.now()}`, name: "", amount: "" }
+    ]);
+  };
+
+  const removePayrollAddition = (id) => {
+    setPayrollAdditions(payrollAdditions.filter(a => a.id !== id));
+  };
+
+  const updatePayrollAddition = (id, field, value) => {
+    setPayrollAdditions(
+      payrollAdditions.map(a => (a.id === id ? { ...a, [field]: value } : a))
     );
   };
 
@@ -2149,8 +2181,14 @@ function PersonalDashboardPage() {
       0
     ) : 0;
 
+    // Custom manual additions na ininput ng user - only count if applied!
+    const customAdditionsTotal = deductionsApplied ? payrollAdditions.reduce(
+      (sum, a) => sum + (Number(a.amount) || 0),
+      0
+    ) : 0;
+
     const totalDeductions = latenessDeduction + customDeductionsTotal;
-    const netPay = Math.max(0, totalGrossEarnings - totalDeductions);
+    const netPay = Math.max(0, totalGrossEarnings + customAdditionsTotal - totalDeductions);
 
     return {
       totalDaysWorked,
@@ -2163,12 +2201,13 @@ function PersonalDashboardPage() {
       totalGrossEarnings,
       latenessDeduction,
       customDeductionsTotal,
+      customAdditionsTotal,
       totalDeductions,
       netPay,
       inDeductionsRange,
       deductionsApplied,
     };
-  }, [payrollRows, settings, payrollDeductions, deductionsStart, deductionsEnd, deductionsApplied, payrollStart, payrollEnd]);
+  }, [payrollRows, settings, payrollDeductions, payrollAdditions, deductionsStart, deductionsEnd, deductionsApplied, payrollStart, payrollEnd]);
 
   const getScheduleForDate = (dateStr) => {
     if (!dateStr) return null;
@@ -2221,22 +2260,7 @@ function PersonalDashboardPage() {
     }
 
     // Intercept with Face Verification if active for employees
-    if (role === "employee" && permissions?.faceVerification && (actionType === "time_in" || actionType === "time_out")) {
-      const cachedBiometricPhoto = await getLocalMedia(`vynora_local_face_photo_${profile.id}`);
-      const facePhoto = (profile?.face_photo && profile.face_photo !== "locally_stored" ? profile.face_photo : "") || cachedBiometricPhoto || "";
-      if (!facePhoto) {
-        VynoraDeveloperLogger.log("Attendance", "Clock action blocked: Employee has not registered a facial biometric reference profile.", null, "warn");
-        addToast("Kailangang mag-enroll ng Face Profile bago makapag-Time In/Out.", "warning");
-        setModal("face-registration");
-        return;
-      }
-      if (!verificationPhoto) {
-        VynoraDeveloperLogger.log("Attendance", "Redirecting to camera modal for biometric verification challenge...", null, "info");
-        setPendingAction(actionType);
-        setModal("camera-biometric");
-        return;
-      }
-    }
+
 
     setSubmitting(true);
     try {
@@ -2975,7 +2999,19 @@ function PersonalDashboardPage() {
       `)
     ].join("");
 
+    // Build the dynamic additions list
+    const additionsListHTML = [
+      ...payrollAdditions.filter(a => a.name && Number(a.amount) > 0).map(a => `
+        <tr style="border-bottom: 1px solid #E2E8F0; font-size: 13px;">
+          <td style="padding: 10px; color: #475569;">${a.name}</td>
+          <td style="padding: 10px; text-align: right; color: #10B981; font-weight: 500;">PHP ${Number(a.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        </tr>
+      `)
+    ].join("");
+
     const hasDeductions = (payrollSummary.latenessDeduction > 0) || (payrollDeductions.some(d => d.name && Number(d.amount) > 0));
+    const hasAdditions = payrollAdditions.some(a => a.name && Number(a.amount) > 0);
+    const totalAdditionsSum = payrollAdditions.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
 
     printWindow.document.write(`
       <html>
@@ -3037,7 +3073,7 @@ function PersonalDashboardPage() {
             <div class="table-container">
               <div>
                 <h4 style="margin: 0 0 10px 0; color: #0F172A; font-weight: 800; font-size: 14px;">Earnings Breakdown</h4>
-                <table>
+                <table style="margin-bottom: 20px;">
                   <thead>
                     <tr>
                       <th>Description</th>
@@ -3064,6 +3100,27 @@ function PersonalDashboardPage() {
                     <tr style="background-color: #F8FAFC; font-weight: bold; font-size: 13px;">
                       <td style="padding: 10px; color: #0F172A;">Gross Earnings</td>
                       <td style="padding: 10px; text-align: right; color: #059669;">PHP ${payrollSummary.totalGrossEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <h4 style="margin: 0 0 10px 0; color: #0F172A; font-weight: 800; font-size: 14px;">Additions & Allowances</h4>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Description</th>
+                      <th class="th-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${hasAdditions ? additionsListHTML : `
+                      <tr style="border-bottom: 1px solid #E2E8F0; font-size: 13px;">
+                        <td style="padding: 10px; color: #94A3B8; italic; text-align: center;" colspan="2">No Additions Recorded</td>
+                      </tr>
+                    `}
+                    <tr style="background-color: #F8FAFC; font-weight: bold; font-size: 13px;">
+                      <td style="padding: 10px; color: #0F172A;">Total Additions</td>
+                      <td style="padding: 10px; text-align: right; color: #059669;">PHP ${totalAdditionsSum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -3096,7 +3153,7 @@ function PersonalDashboardPage() {
             <div class="summary-card">
               <div>
                 <div class="summary-title">Net Take-Home Pay</div>
-                <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">Gross Pay minus Total Deductions</div>
+                <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">Gross Pay + Additions minus Total Deductions</div>
               </div>
               <div class="summary-value">PHP ${payrollSummary.netPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </div>
@@ -5285,6 +5342,10 @@ function PersonalDashboardPage() {
                         addPayrollDeduction={addPayrollDeduction}
                         removePayrollDeduction={removePayrollDeduction}
                         updatePayrollDeduction={updatePayrollDeduction}
+                        payrollAdditions={payrollAdditions}
+                        addPayrollAddition={addPayrollAddition}
+                        removePayrollAddition={removePayrollAddition}
+                        updatePayrollAddition={updatePayrollAddition}
                         handlePrintPayslip={handlePrintPayslip}
                         role={role}
                         payslipStatus={payslipStatus}
@@ -5667,35 +5728,7 @@ function PersonalDashboardPage() {
             </div>
           )}
         </AnimatePresence>
-        {/* --- FACE VERIFICATION MODALS --- */}
-        {modal === "face-registration" && (
-          <FaceRegistrationModal
-            onRegister={handleRegisterFace}
-            onClose={() => setModal(null)}
-          />
-        )}
 
-        {modal === "camera-biometric" && (
-          <CameraBiometricModal
-            employee={{
-              id: profile?.id || "",
-              fullName: profile?.full_name || "Employee",
-              facePhoto: (profile?.face_photo && profile.face_photo !== "locally_stored" ? profile.face_photo : "") || localFacePhoto || "",
-            }}
-            enabledTimeButtons={[
-              { label: pendingAction === "time_in" ? "Time In" : "Time Out", field: pendingAction }
-            ]}
-            onRecordAction={async (field, photo) => {
-              setModal(null);
-              setPendingAction(null);
-              await handleClockAction(field, photo);
-            }}
-            onClose={() => {
-              setModal(null);
-              setPendingAction(null);
-            }}
-          />
-        )}
 
         {/* Ephemeral Biometric DTR Proof Watermarked Card */}
         {ephemeralSelfie && (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { HelpCircle, X, ChevronRight, ChevronLeft, BookOpen, Clock, Shield, DollarSign } from "lucide-react";
+import { HelpCircle, X, ChevronRight, ChevronLeft, BookOpen, Clock, DollarSign } from "lucide-react";
 
 export default function HelpSystem({ role = "employee" }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -124,26 +124,6 @@ export default function HelpSystem({ role = "employee" }) {
 
   const adminTopics = [
     {
-      id: "geofence",
-      title: "Geofencing & AI Security",
-      icon: <Shield size={18} className="text-cyan-400" />,
-      description: "How to restrict clock-ins and audit employee logs.",
-      content: [
-        {
-          subtitle: "1. Precise Geofence Boundary",
-          text: "Under Settings > Geofence, you can specify coordinates and radius. Employees can ONLY clock in or out if they are physically within this radius.",
-        },
-        {
-          subtitle: "2. Anti-Spoofing AI Face Matching",
-          text: "When employees clock in via camera, their facial features are checked. You can inspect actual verification selfies in the DTR Details dialog to verify identities.",
-        },
-        {
-          subtitle: "3. Location Overrides",
-          text: "If field errands are enabled, employees can register locations outside the geofence for legitimate off-site work (like client meetings or bank runs).",
-        }
-      ]
-    },
-    {
       id: "payroll",
       title: "Payroll Batches & Deductions",
       icon: <DollarSign size={18} className="text-emerald-400" />,
@@ -188,21 +168,21 @@ export default function HelpSystem({ role = "employee" }) {
   const employeeTopics = [
     {
       id: "timekeeping",
-      title: "Secure DTR & Offline Clock-In",
+      title: "Seamless DTR & Offline Clock-In",
       icon: <Clock size={18} className="text-cyan-400" />,
       description: "How to log shifts safely even with poor internet.",
       content: [
         {
-          subtitle: "1. Registering AI Face Profile",
-          text: "If face matching is active, you must click 'Enroll Face Profile' to register your photo. This ensures secure and verified attendance recording.",
+          subtitle: "1. Easy Clock-In/Out",
+          text: "Start and end your work session with a simple click on the Dashboard timekeeping widget.",
         },
         {
           subtitle: "2. Dynamic Offline Mode",
-          text: "If your network disconnects, your DTR clicks are queued locally. Once connection is restored, click the Sync button to push offline events safely.",
+          text: "If your network disconnects, your DTR clicks are queued locally. Once connection is restored, the system auto-syncs them safely.",
         },
         {
-          subtitle: "3. Logging Errand Breaks",
-          text: "For off-site duties, use the Field Errand tracker. You can log arrival/completion coordinates and submit notes straight to the admin feed.",
+          subtitle: "3. Logging Breaks",
+          text: "Pause your work session using the Break action buttons, and resume when you are back to work.",
         }
       ]
     },
@@ -255,9 +235,9 @@ export default function HelpSystem({ role = "employee" }) {
       icon: "🚀"
     },
     {
-      title: "High-Security Geofencing",
-      text: "Clock-ins are restricted to workspace boundaries and secured with AI Face matching. No more buddy-punching or location spoofing.",
-      icon: "🎯"
+      title: "Productivity & Goals",
+      text: "Set target weekly hours and visually monitor your day-to-day progress with interactive analytics.",
+      icon: "📊"
     },
     {
       title: "Flexible Shift Scheduling",

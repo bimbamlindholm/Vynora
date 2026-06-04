@@ -6,7 +6,7 @@ import VynoraNavbar from "../components/vynora/VynoraNavbar";
 import VynoraFooter from "../components/vynora/VynoraFooter";
 import PageTransition from "../components/PageTransition";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { Sparkles, Shield, Clock, BarChart3, CloudLightning, ArrowRight, Download, Laptop, Smartphone, X } from "lucide-react";
+import { Sparkles, Shield, Clock, BarChart3, CloudLightning, ArrowRight, Laptop, Smartphone, X } from "lucide-react";
 
 export default function LandingPage() {
   const { user, role, loading } = useAuth();
@@ -232,58 +232,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* B. SLICK MOBILE CLOCK-IN PREVIEW OVERLAY */}
-              <div 
-                className="absolute right-0 sm:right-6 bottom-[-24px] w-[184px] aspect-[0.55] rounded-[2rem] border border-cyan-400/30 bg-[#08101E]/95 p-3.5 shadow-[0_0_35px_rgba(6,182,212,0.25)] z-20 flex flex-col justify-between relative select-none animate-[float_4s_ease-in-out_infinite]"
-                style={{
-                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3), inset 0 0 25px rgba(6,182,212,0.08)",
-                }}
-              >
-                {/* Camera / Speaker Notch */}
-                <div className="h-3 w-16 bg-slate-950 rounded-full mx-auto shrink-0 mb-2 flex items-center justify-center">
-                  <div className="h-1 w-1 rounded-full bg-blue-900" />
-                </div>
-
-                <div className="flex-1 flex flex-col justify-between select-none">
-                  {/* Header Title inside Phone */}
-                  <div className="text-center shrink-0">
-                    <span className="block text-[5px] font-bold text-slate-500 uppercase tracking-[0.16em]">Vynora mobile</span>
-                    <span className="block text-[8px] font-black text-white mt-0.5 tracking-wider uppercase">Biometric DTR</span>
-                  </div>
-
-                  {/* Pulsing clock checkmark widget */}
-                  <div className="flex flex-col items-center justify-center flex-1 my-2">
-                    <span className="text-base font-black text-white tracking-wide">11:10 AM</span>
-                    <span className="text-[5px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">June 1, 2026</span>
-                    
-                    {/* Glowing circular node */}
-                    <div className="h-12 w-12 rounded-full bg-emerald-500/10 border border-emerald-400/25 flex items-center justify-center text-emerald-400 my-2.5 shadow-[0_0_20px_rgba(16,185,129,0.25)] relative">
-                      <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-ping opacity-75" />
-                      <span className="text-base">✔</span>
-                    </div>
-
-                    <div className="space-y-1 w-full text-center">
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-[5px] font-black text-emerald-300 uppercase tracking-widest">
-                        <span className="h-1 w-1 rounded-full bg-emerald-400 inline-block animate-pulse" /> GPS: Within Range
-                      </span>
-                      <span className="block text-[5px] text-slate-400 font-semibold truncate leading-none">AI Face Match Profile Verified</span>
-                    </div>
-                  </div>
-
-                  {/* Pulsing button widget */}
-                  <div className="shrink-0 pt-2 border-t border-white/5">
-                    <button
-                      type="button"
-                      disabled
-                      className="glow-button w-full h-8 rounded-lg text-[7px] font-black uppercase tracking-widest text-white shadow-md shadow-cyan-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      Clock In Now
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
-
           </div>
         </div>
 

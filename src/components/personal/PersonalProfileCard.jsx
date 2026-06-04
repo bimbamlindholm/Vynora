@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { Save, Camera, User, Briefcase, Sparkles, Building2, TrendingUp, Settings, Trash2 } from "lucide-react";
+import { Save, Camera, User, Briefcase, Building2, TrendingUp, Settings, Trash2 } from "lucide-react";
 
 /**
  * Presentational card rendering premium personal profile details,
@@ -17,7 +16,6 @@ export default function PersonalProfileCard({
   handleRemoveProfilePhoto,
   setActiveTab,
   subscriptionTier = "free",
-  setSubscriptionTier,
 }) {
   // Determine Account Type Badge
   const getAccountBadge = () => {

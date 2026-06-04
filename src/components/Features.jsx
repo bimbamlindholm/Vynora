@@ -1,16 +1,16 @@
-import { Clock4, ShieldCheck, FileSpreadsheet, Lock, CalendarRange, MessageSquare } from "lucide-react";
+import { Clock4, Target, FileSpreadsheet, Lock, CalendarRange, MessageSquare } from "lucide-react";
 
 const features = [
   {
     icon: Clock4,
-    title: "Geofenced Tracking",
-    text: "Log clock-ins with high-precision GPS geofencing. Ensure employees are physically present within custom office boundaries.",
+    title: "Seamless Time Tracking",
+    text: "Record check-ins, check-outs, and breaks with a single tap. Designed to keep your workday simple and organized.",
     tone: "text-emerald-300 bg-emerald-400/10",
   },
   {
-    icon: ShieldCheck,
-    title: "AI Face Verification",
-    text: "Stop buddy-punching and clock-spoofing entirely. Verify identity in real-time with camera registration and secure photo snapshots.",
+    icon: Target,
+    title: "Productivity & Goals",
+    text: "Set weekly productivity targets, track worked hours, and visually monitor your growth over time.",
     tone: "text-cyan-300 bg-cyan-400/10",
   },
   {

@@ -6,17 +6,11 @@ import { clientPermissionsToDb, dbPermissionsToClient } from "../utils/supabaseM
 
 const AuthContext = createContext(null);
 
-const roleRedirects = {
-  admin: "/personal-dashboard",
-  employee: "/personal-dashboard",
-  personal: "/personal-dashboard",
-};
-
-export function getRedirectPathByRole(role) {
+export function getRedirectPathByRole() {
   return "/personal-dashboard";
 }
 
-function getWorkspaceAccessRole(activeWorkspace, activeMembership, fallbackProfileRole) {
+function getWorkspaceAccessRole() {
   return "personal";
 }
 

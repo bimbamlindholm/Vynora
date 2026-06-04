@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { BriefcaseBusiness, Menu, UserRound, X, Sparkles } from "lucide-react";
+import { Menu, UserRound, X, Sparkles } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const navLinks = [
@@ -9,11 +9,6 @@ const navLinks = [
   { label: "Pricing", to: "/pricing" },
   { label: "About Us", to: "/about" },
   { label: "Contact", to: "/contact" }
-];
-
-const loginTypes = [
-  { icon: UserRound, label: "Personal", to: "/personal-login" },
-  { icon: BriefcaseBusiness, label: "Workspace", to: "/workspace-login" },
 ];
 
 export default function VynoraNavbar() {

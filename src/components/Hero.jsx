@@ -190,39 +190,6 @@ function DashboardMockup() {
         </div>
       </div>
 
-      <div className="phone-mockup glass-panel absolute -bottom-12 right-0 hidden w-[210px] rounded-[2.2rem] p-3 shadow-[0_0_45px_rgba(124,58,237,0.3)] lg:block xl:-right-16">
-        <div className="rounded-[1.85rem] border border-white/10 bg-[#08101F] p-4 min-h-[350px] flex flex-col justify-between">
-          <div>
-            <div className="mb-5 h-4 rounded-full bg-white/5" />
-            <h3 className="text-sm font-bold leading-tight text-white">Clock In Portal</h3>
-            <p className="mt-1 text-[0.58rem] text-slate-400">GPS Geofence + AI Verification</p>
-
-            <div className="glass-panel mt-4 rounded-2xl p-3">
-              <p className="text-[0.64rem] font-bold text-slate-300">Geofence Status</p>
-              <div className="mt-2 flex items-center justify-between gap-2">
-                <div className="space-y-1 text-[0.56rem] text-cyan-300">
-                  <p className="text-emerald-400 font-bold">✓ Within Range</p>
-                  <p>Site: Office HQ</p>
-                </div>
-                <ProgressRing small />
-              </div>
-            </div>
-
-            <p className="mt-4 text-[0.68rem] font-bold text-white">Camera Feed</p>
-            <div className="relative rounded-xl border border-cyan-400/20 bg-slate-950/80 p-4 aspect-video flex flex-col items-center justify-center overflow-hidden">
-              <div className="absolute top-1/2 left-0 right-0 border-t border-cyan-400 biometric-laser shadow-[0_0_8px_cyan]" />
-              <span className="text-[8px] font-black tracking-widest text-cyan-300 uppercase animate-pulse">Scanning</span>
-            </div>
-          </div>
-
-          <button
-            className="w-full mt-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl py-2.5 text-[10px] font-black tracking-wide shadow-md transition active:scale-95 flex items-center justify-center gap-1.5"
-            type="button"
-          >
-            CONFIRM PUNCH
-          </button>
-        </div>
-      </div>
     </motion.div>
   );
 }

@@ -22,15 +22,15 @@ export default function PersonalPayrollCalculator({
   addPayrollDeduction,
   removePayrollDeduction,
   updatePayrollDeduction,
+  payrollAdditions = [],
+  addPayrollAddition,
+  removePayrollAddition,
+  updatePayrollAddition,
   handlePrintPayslip,
   role = "employee",
   payslipStatus = "none",
   loadingPayslipStatus = false,
   handleRequestPayslip,
-  deductionsStart,
-  setDeductionsStart,
-  deductionsEnd,
-  setDeductionsEnd,
   processedPayslips = [],
   handleApplyDeductionClick,
   handleClearProcessedHistory,
@@ -224,32 +224,109 @@ export default function PersonalPayrollCalculator({
 
       {/* Dual Column Layout: Earnings vs Deductions */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left Column: Earnings */}
-        <div className="glass-panel border-white/5 bg-slate-900/20 p-6 rounded-[2rem] shadow-xl space-y-4 backdrop-blur-md">
-          <div className="flex items-center gap-2 text-white font-extrabold text-xs tracking-wider uppercase border-b border-white/5 pb-3">
-            <DollarSign size={15} className="text-emerald-400" />
-            Earnings Breakdown
-          </div>
-          <div className="space-y-3 font-semibold text-xs text-slate-300">
-            <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
-              <span>Basic Salary (Regular Hours)</span>
-              <span className="text-white font-black text-sm">PHP {(payrollSummary?.basicEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        {/* Left Column: Earnings & Additions */}
+        <div className="space-y-6">
+          {/* Earnings Breakdown */}
+          <div className="glass-panel border-white/5 bg-slate-900/20 p-6 rounded-[2rem] shadow-xl space-y-4 backdrop-blur-md">
+            <div className="flex items-center gap-2 text-white font-extrabold text-xs tracking-wider uppercase border-b border-white/5 pb-3">
+              <DollarSign size={15} className="text-emerald-400" />
+              Earnings Breakdown
             </div>
-            {(payrollSummary?.overtimeEarnings || 0) > 0 && (
+            <div className="space-y-3 font-semibold text-xs text-slate-300">
               <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
-                <span>Overtime Pay</span>
-                <span className="text-white font-black text-sm">PHP {(payrollSummary?.overtimeEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>Basic Salary (Regular Hours)</span>
+                <span className="text-white font-black text-sm">PHP {(payrollSummary?.basicEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-            )}
-            {(payrollSummary?.nightDiffEarnings || 0) > 0 && (
-              <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
-                <span>Night Differential Pay</span>
-                <span className="text-white font-black text-sm">PHP {(payrollSummary?.nightDiffEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              {(payrollSummary?.overtimeEarnings || 0) > 0 && (
+                <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
+                  <span>Overtime Pay</span>
+                  <span className="text-white font-black text-sm">PHP {(payrollSummary?.overtimeEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              )}
+              {(payrollSummary?.nightDiffEarnings || 0) > 0 && (
+                <div className="flex justify-between items-center p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
+                  <span>Night Differential Pay</span>
+                  <span className="text-white font-black text-sm">PHP {(payrollSummary?.nightDiffEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 font-black text-sm text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.05)]">
+                <span>Total Gross Pay</span>
+                <span className="text-base font-extrabold">PHP {(payrollSummary?.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-            )}
-            <div className="flex justify-between items-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 font-black text-sm text-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.05)]">
-              <span>Total Gross Pay</span>
-              <span className="text-base font-extrabold">PHP {(payrollSummary?.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+
+          {/* Additions & Allowances spreadsheet */}
+          <div className="glass-panel border-white/5 bg-slate-900/20 p-6 rounded-[2rem] shadow-xl space-y-4 backdrop-blur-md">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2 text-white font-extrabold text-xs tracking-wider uppercase">
+                <Plus size={15} className="text-emerald-400" />
+                Additions & Allowances {role === "employee" && "🔒 (View Only)"}
+              </div>
+              {role !== "employee" && (
+                <button
+                  type="button"
+                  onClick={addPayrollAddition}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl text-[10px] font-black text-emerald-400 transition cursor-pointer"
+                >
+                  <Plus size={12} /> Add Addition
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3.5">
+              {payrollAdditions.length === 0 && (
+                <div className="text-center py-8 text-xs text-slate-500 italic bg-slate-950/20 rounded-2xl border border-dashed border-white/5">
+                  No active additions. {role !== "employee" ? 'Tap "Add Addition" to create a named allowance/bonus slot.' : 'No admin-applied additions for this cutoff period.'}
+                </div>
+              )}
+
+              {payrollAdditions.map((add) => (
+                <div key={add.id} className="flex gap-2.5 items-center">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      id={`addName_${add.id}`}
+                      name={`addName_${add.id}`}
+                      placeholder="e.g. Allowance, Bonus"
+                      value={add.name}
+                      disabled={role === "employee"}
+                      onChange={(e) => updatePayrollAddition(add.id, "name", e.target.value)}
+                      className="w-full h-11 px-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white outline-none focus:border-emerald-500/40 focus:bg-slate-950 transition-all placeholder:text-slate-600 disabled:opacity-75 disabled:cursor-not-allowed"
+                      required
+                    />
+                  </div>
+                  <div className="relative w-36">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500">PHP</span>
+                    <input
+                      type="number"
+                      id={`addAmount_${add.id}`}
+                      name={`addAmount_${add.id}`}
+                      placeholder="0.00"
+                      value={add.amount}
+                      disabled={role === "employee"}
+                      onChange={(e) => updatePayrollAddition(add.id, "amount", e.target.value)}
+                      className="w-full h-11 pl-11 pr-4 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white text-right outline-none focus:border-emerald-500/40 focus:bg-slate-950 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-600 disabled:opacity-75 disabled:cursor-not-allowed"
+                      required
+                    />
+                  </div>
+                  {role !== "employee" && (
+                    <button
+                      type="button"
+                      onClick={() => removePayrollAddition(add.id)}
+                      className="h-11 w-11 rounded-xl border border-white/10 bg-slate-950/60 flex items-center justify-center text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/20 active:scale-90 transition-all shrink-0 cursor-pointer"
+                      aria-label="Remove addition"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <div className="flex justify-between items-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 font-black text-sm text-emerald-400 mt-2 shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+                <span>Total Additions</span>
+                <span className="text-base font-extrabold">PHP {(payrollSummary?.customAdditionsTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -411,8 +488,9 @@ export default function PersonalPayrollCalculator({
               {processedPayslips.filter(Boolean).map((slip) => {
                 const lateness = Number(slip.latenessDeduction) || 0;
                 const customSum = (slip.customDeductions || []).reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+                const customAdditionsSum = (slip.customAdditions || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
                 const totalDeductions = lateness + customSum;
-                const netPay = Math.max(0, (slip.totalGrossEarnings || 0) - totalDeductions);
+                const netPay = Math.max(0, (slip.totalGrossEarnings || 0) + customAdditionsSum - totalDeductions);
 
                 return (
                   <div key={slip.id} className="p-5 rounded-2xl border border-white/5 bg-slate-950/40 hover:border-emerald-500/20 transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -431,6 +509,10 @@ export default function PersonalPayrollCalculator({
                       <div className="text-left md:text-right">
                         <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Gross Pay</span>
                         <span className="block text-xs font-extrabold text-slate-300">PHP {(slip.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="text-left md:text-right">
+                        <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Additions</span>
+                        <span className="block text-xs font-extrabold text-emerald-400">PHP {customAdditionsSum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="text-left md:text-right">
                         <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider">Deductions</span>

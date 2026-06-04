@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, UserRound } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const Facebook = ({ size = 18, className = "" }) => (
@@ -24,7 +24,6 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function RegisterForm() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { registerPersonal, loginWithGoogle, loginWithFacebook } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -32,7 +31,6 @@ function RegisterForm() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  const accountType = searchParams.get("type") || "personal";
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));

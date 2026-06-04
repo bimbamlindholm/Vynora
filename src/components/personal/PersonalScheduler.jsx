@@ -13,10 +13,8 @@ export default function PersonalScheduler({
   setCalendarDate,
   calendarDays,
   currentTime,
-  openEditRow,
   diaryNotes,
   onOpenDiary,
-  role
 }) {
   return (
     <div className="glass-panel rounded-3xl border-white/5 bg-slate-900/30 p-4 sm:p-6">

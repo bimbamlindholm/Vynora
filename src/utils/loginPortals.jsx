@@ -37,7 +37,7 @@ export const loginPortals = {
   },
 };
 
-export function getLoginPortal(type) {
+export function getLoginPortal() {
   return loginPortals.personal;
 }
 
