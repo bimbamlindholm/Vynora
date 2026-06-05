@@ -448,16 +448,25 @@ function PersonalDashboardPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  profileHook.setOnboardingError("");
-                  profileHook.setOnboardingStep(2);
-                }}
-                className="w-full h-14 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-sm font-black text-white rounded-xl shadow-lg shadow-cyan-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer mt-4"
-              >
-                Let's Get Started 🚀
-              </button>
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex-1 h-14 border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-xs font-black text-slate-300 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  ◀ Go Back to Landing Page
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    profileHook.setOnboardingError("");
+                    profileHook.setOnboardingStep(2);
+                  }}
+                  className="flex-1 h-14 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-black text-white rounded-xl shadow-lg shadow-cyan-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Let's Get Started 🚀
+                </button>
+              </div>
             </div>
           )}
 
