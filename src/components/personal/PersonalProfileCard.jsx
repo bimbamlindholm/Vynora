@@ -193,7 +193,7 @@ export default function PersonalProfileCard({
                 <input
                   type="text"
                   required
-                  placeholder="Sherwin Lindholm"
+                  placeholder="e.g. John Doe"
                   value={profileForm.fullName}
                   onChange={(e) => setProfileForm(f => ({ ...f, fullName: e.target.value }))}
                   className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"
@@ -264,7 +264,7 @@ export default function PersonalProfileCard({
                     Street Address
                     <input
                       type="text"
-                      placeholder="e.g. Blk 1 Upper Federico St"
+                      placeholder="e.g. 123 Main St"
                       value={profileForm.streetAddress || ""}
                       onChange={(e) => setProfileForm(f => ({ ...f, streetAddress: e.target.value }))}
                       className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"
@@ -274,7 +274,7 @@ export default function PersonalProfileCard({
                     City
                     <input
                       type="text"
-                      placeholder="e.g. Olongapo City"
+                      placeholder="e.g. Manila"
                       value={profileForm.city || ""}
                       onChange={(e) => setProfileForm(f => ({ ...f, city: e.target.value }))}
                       className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"
@@ -284,7 +284,7 @@ export default function PersonalProfileCard({
                     Province
                     <input
                       type="text"
-                      placeholder="e.g. Zambales"
+                      placeholder="e.g. Metro Manila"
                       value={profileForm.province || ""}
                       onChange={(e) => setProfileForm(f => ({ ...f, province: e.target.value }))}
                       className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"
@@ -387,7 +387,7 @@ export default function PersonalProfileCard({
               Company / Organization Name
               <input
                 type="text"
-                placeholder="Vynora Technologies"
+                placeholder="e.g. Acme Corporation"
                 value={profileForm.companyName || ""}
                 onChange={(e) => setProfileForm(f => ({ ...f, companyName: e.target.value }))}
                 className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"
@@ -398,7 +398,7 @@ export default function PersonalProfileCard({
               Department / Team
               <input
                 type="text"
-                placeholder="Engineering"
+                placeholder="e.g. IT Department"
                 value={profileForm.department}
                 onChange={(e) => setProfileForm(f => ({ ...f, department: e.target.value }))}
                 className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"
@@ -409,7 +409,7 @@ export default function PersonalProfileCard({
               Employee ID / Number
               <input
                 type="text"
-                placeholder="EMP-2026-001"
+                placeholder="e.g. EMP-001"
                 value={profileForm.employeeId}
                 onChange={(e) => setProfileForm(f => ({ ...f, employeeId: e.target.value }))}
                 className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"
@@ -435,7 +435,7 @@ export default function PersonalProfileCard({
               Career Goal
               <input
                 type="text"
-                placeholder="Become a Full Stack Developer"
+                placeholder="e.g. Learn new technologies"
                 value={profileForm.careerGoal || ""}
                 onChange={(e) => setProfileForm(f => ({ ...f, careerGoal: e.target.value }))}
                 className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"
@@ -446,7 +446,7 @@ export default function PersonalProfileCard({
               Skill / Field Focus
               <input
                 type="text"
-                placeholder="React, UI Design, Backend Development"
+                placeholder="e.g. Javascript, CSS"
                 value={profileForm.skillFocus || ""}
                 onChange={(e) => setProfileForm(f => ({ ...f, skillFocus: e.target.value }))}
                 className="h-10 px-4 rounded-xl border border-white/5 bg-slate-900/60 text-xs text-white outline-none focus:border-emerald-500/50 transition placeholder:text-slate-600 focus:bg-slate-900"

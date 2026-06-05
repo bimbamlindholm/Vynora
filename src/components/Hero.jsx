@@ -111,7 +111,7 @@ function DashboardMockup() {
             <div className="hidden items-center gap-2 rounded-xl bg-white/[0.04] p-2 sm:flex">
               <div className="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-300 to-violet-500" />
               <div>
-                <p className="text-[0.66rem] font-bold text-white">Sherwin L.</p>
+                <p className="text-[0.66rem] font-bold text-white">John D.</p>
                 <p className="text-[0.58rem] text-slate-500">Admin</p>
               </div>
             </div>
@@ -174,7 +174,7 @@ function DashboardMockup() {
               <h3 className="mb-3 text-sm font-bold text-white">Recent Activity</h3>
               <div className="space-y-3">
                 {[
-                  ["Sherwin Lindholm", "Timed In", "8:02 AM", "text-emerald-300"],
+                  ["John Doe", "Timed In", "8:02 AM", "text-emerald-300"],
                   ["Vince Diaz", "Break Out", "12:45 PM", "text-sky-300"],
                   ["John Doe", "Timed Out", "5:00 PM", "text-rose-300"]
                 ].map(([label, action, time, color]) => (

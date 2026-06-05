@@ -244,7 +244,7 @@ export default function CompleteRegistrationPage() {
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                           <input
                             type="text"
-                            placeholder="e.g. EMP-2026-001"
+                            placeholder="e.g. EMP-001"
                             value={form.employeeId}
                             onChange={(e) => update("employeeId", e.target.value)}
                             className="h-[52px] w-full rounded-xl border border-white/10 bg-white/[0.025] px-12 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/60 focus:bg-cyan-300/[0.035]"

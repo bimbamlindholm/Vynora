@@ -43,8 +43,8 @@ function Contact() {
               </div>
               <div>
                 <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Email Support</span>
-                <a href="mailto:sherwinlindholm0928@gmail.com" className="block text-base font-black text-white hover:text-cyan-300 transition mt-0.5 break-all">
-                  sherwinlindholm0928@gmail.com
+                <a href="mailto:support@vynora.com" className="block text-base font-black text-white hover:text-cyan-300 transition mt-0.5 break-all">
+                  support@vynora.com
                 </a>
               </div>
             </div>
@@ -57,14 +57,14 @@ function Contact() {
                 <div>
                   <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Direct Message</span>
                   <span className="block text-sm font-bold text-white mt-0.5">
-                    Messenger: <span className="text-cyan-200">Sherwin Lindholm</span>
+                    Messenger: <span className="text-cyan-200">Vynora Support</span>
                   </span>
                 </div>
               </div>
               <div className="pl-12 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-                <span>WhatsApp: <a href="https://wa.me/639615884969" target="_blank" rel="noopener noreferrer" className="text-cyan-300 hover:underline">0961 588 4969</a></span>
+                <span>WhatsApp: <a href="#" className="text-cyan-300 hover:underline">+63 900 000 0000</a></span>
                 <span className="text-slate-600">|</span>
-                <span>Telegram: <a href="https://t.me/+639615884969" target="_blank" rel="noopener noreferrer" className="text-cyan-300 hover:underline">0961 588 4969</a></span>
+                <span>Telegram: <a href="#" className="text-cyan-300 hover:underline">+63 900 000 0000</a></span>
               </div>
             </div>
 
@@ -87,7 +87,7 @@ function Contact() {
               <div>
                 <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Location</span>
                 <span className="block text-sm font-bold text-white mt-0.5 leading-snug">
-                  Block 1 Upper Federico Street, Gordon Heights, Olongapo City, 2200, Zambales, Philippines
+                  Quezon City, Metro Manila, Philippines
                 </span>
               </div>
             </div>

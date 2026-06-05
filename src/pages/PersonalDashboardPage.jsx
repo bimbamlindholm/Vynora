@@ -355,7 +355,9 @@ function PersonalDashboardPage() {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-[120px]" />
 
-        <div className="relative w-full max-w-xl rounded-[2.5rem] border border-white/10 bg-[#07111F]/70 p-6 sm:p-10 backdrop-blur-md shadow-2xl flex flex-col gap-6 text-center max-h-[95dvh] overflow-y-auto animate-onboarding-modal-enter">
+        <div className={`relative w-full max-w-xl rounded-[2.5rem] border border-white/10 bg-[#07111F]/70 backdrop-blur-md shadow-2xl flex flex-col text-center max-h-[95dvh] overflow-y-auto animate-onboarding-modal-enter transition-all ${
+          profileHook.onboardingStep >= 4 ? "p-5 sm:p-6 gap-4" : "p-6 sm:p-10 gap-6"
+        }`}>
           <div className="flex items-center justify-between gap-2 max-w-xs mx-auto w-full mb-2">
             {[1, 2, 3, 4, 5].map((step) => (
               <div key={step} className="flex-1 flex items-center">
@@ -471,7 +473,7 @@ function PersonalDashboardPage() {
                   Full Name <span className="text-rose-500">*</span>
                   <input
                     type="text"
-                    placeholder="Sherwin Lindholm"
+                    placeholder="e.g. John Doe"
                     value={profileHook.onboardingForm.fullName}
                     onChange={(e) => {
                       profileHook.setOnboardingError("");
@@ -598,7 +600,7 @@ function PersonalDashboardPage() {
                   Street Address <span className="text-rose-500">*</span>
                   <input
                     type="text"
-                    placeholder="Blk 1 Upper Federico St"
+                    placeholder="e.g. 123 Main St"
                     value={profileHook.onboardingForm.streetAddress}
                     onChange={(e) => {
                       profileHook.setOnboardingError("");
@@ -617,7 +619,7 @@ function PersonalDashboardPage() {
                   City <span className="text-rose-500">*</span>
                   <input
                     type="text"
-                    placeholder="Olongapo City"
+                    placeholder="e.g. Manila"
                     value={profileHook.onboardingForm.city}
                     onChange={(e) => {
                       profileHook.setOnboardingError("");
@@ -636,7 +638,7 @@ function PersonalDashboardPage() {
                   Province <span className="text-rose-500">*</span>
                   <input
                     type="text"
-                    placeholder="Zambales"
+                    placeholder="e.g. Metro Manila"
                     value={profileHook.onboardingForm.province}
                     onChange={(e) => {
                       profileHook.setOnboardingError("");
@@ -655,7 +657,7 @@ function PersonalDashboardPage() {
                   Country
                   <input
                     type="text"
-                    placeholder="Philippines"
+                    placeholder="e.g. Philippines"
                     value={profileHook.onboardingForm.country}
                     onChange={(e) => profileHook.setOnboardingForm((current) => ({ ...current, country: e.target.value }))}
                     className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
@@ -702,14 +704,14 @@ function PersonalDashboardPage() {
           )}
 
           {profileHook.onboardingStep === 4 && (
-            <div className="space-y-5 text-left animate-fade-in">
-              <div className="text-center space-y-2">
+            <div className="space-y-3.5 text-left animate-fade-in">
+              <div className="text-center space-y-1">
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Professional Setup</h3>
                 <p className="text-xs text-slate-400">Select your active job, profession category, and employment setup.</p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+              <div className="grid gap-x-4 gap-y-2.5 sm:grid-cols-2">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold sm:col-span-2">
                   Job Title / Role <span className="text-rose-500">*</span>
                   <input
                     type="text"
@@ -728,7 +730,7 @@ function PersonalDashboardPage() {
                   />
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold">
                   Profession Category <span className="text-rose-500">*</span>
                   <select
                     value={profileHook.onboardingForm.professionCategory}
@@ -755,7 +757,7 @@ function PersonalDashboardPage() {
                   </select>
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold">
                   Employment Type <span className="text-rose-500">*</span>
                   <select
                     value={profileHook.onboardingForm.employmentType}
@@ -781,7 +783,7 @@ function PersonalDashboardPage() {
                   </select>
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold">
                   Work Arrangement <span className="text-rose-500">*</span>
                   <select
                     value={profileHook.onboardingForm.workArrangement}
@@ -804,33 +806,33 @@ function PersonalDashboardPage() {
                   </select>
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold">
                   Company Name <span className="text-slate-600 font-normal">(Optional)</span>
                   <input
                     type="text"
-                    placeholder="Vynora Technologies"
+                    placeholder="e.g. Acme Corporation"
                     value={profileHook.onboardingForm.companyName}
                     onChange={(e) => profileHook.setOnboardingForm((current) => ({ ...current, companyName: e.target.value }))}
                     className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
                   />
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold">
                   Department <span className="text-slate-600 font-normal">(Optional)</span>
                   <input
                     type="text"
-                    placeholder="Engineering"
+                    placeholder="e.g. IT Department"
                     value={profileHook.onboardingForm.department}
                     onChange={(e) => profileHook.setOnboardingForm((current) => ({ ...current, department: e.target.value }))}
                     className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
                   />
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold">
                   Employee ID <span className="text-slate-600 font-normal">(Optional)</span>
                   <input
                     type="text"
-                    placeholder="EMP-2026-001"
+                    placeholder="e.g. EMP-001"
                     value={profileHook.onboardingForm.employeeId}
                     onChange={(e) => profileHook.setOnboardingForm((current) => ({ ...current, employeeId: e.target.value }))}
                     className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
@@ -838,7 +840,7 @@ function PersonalDashboardPage() {
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-3">
+              <div className="flex gap-3 pt-1.5">
                 <button
                   type="button"
                   onClick={() => profileHook.setOnboardingStep(3)}
@@ -882,36 +884,36 @@ function PersonalDashboardPage() {
           )}
 
           {profileHook.onboardingStep === 5 && (
-            <div className="space-y-5 text-left animate-fade-in">
-              <div className="text-center space-y-2">
+            <div className="space-y-3.5 text-left animate-fade-in">
+              <div className="text-center space-y-1">
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Goals & Preferences</h3>
                 <p className="text-xs text-slate-400">Establish personal targets, core skills, and weekly working days.</p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+              <div className="grid gap-x-4 gap-y-2.5 sm:grid-cols-2">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold sm:col-span-2">
                   Career Goal
                   <input
                     type="text"
-                    placeholder="Become a Full Stack Developer"
+                    placeholder="e.g. Learn new technologies"
                     value={profileHook.onboardingForm.careerGoal}
                     onChange={(e) => profileHook.setOnboardingForm((current) => ({ ...current, careerGoal: e.target.value }))}
                     className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
                   />
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold">
                   Skill / Field Focus
                   <input
                     type="text"
-                    placeholder="React, UI, Node.js"
+                    placeholder="e.g. Javascript, CSS"
                     value={profileHook.onboardingForm.skillFocus}
                     onChange={(e) => profileHook.setOnboardingForm((current) => ({ ...current, skillFocus: e.target.value }))}
                     className="h-10 px-4 rounded-xl bg-slate-950 border border-white/10 text-xs text-white outline-none focus:border-cyan-500 transition-all"
                   />
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold">
                   Experience Level
                   <select
                     value={profileHook.onboardingForm.experienceLevel}
@@ -926,7 +928,7 @@ function PersonalDashboardPage() {
                   </select>
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold sm:col-span-2">
                   Weekly Productivity Goal (Hours/Week)
                   <input
                     type="number"
@@ -941,7 +943,7 @@ function PersonalDashboardPage() {
                   />
                 </label>
 
-                <label className="grid gap-1.5 text-xs text-slate-400 font-bold sm:col-span-2">
+                <label className="grid gap-1 text-xs text-slate-400 font-bold sm:col-span-2">
                   🔍 Where did you discover Vynora? <span className="text-rose-500">*</span>
                   <select
                     value={profileHook.onboardingForm.discoverySource}
@@ -965,7 +967,7 @@ function PersonalDashboardPage() {
                   </select>
                 </label>
 
-                <div className="sm:col-span-2 space-y-2">
+                <div className="sm:col-span-2 space-y-1.5">
                   <span className="block text-xs font-bold text-slate-400">Preferred Working Days</span>
                   <div className="flex flex-wrap gap-1.5 justify-center">
                     {daysOfWeek.map((day) => {
@@ -993,7 +995,7 @@ function PersonalDashboardPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-3">
+              <div className="flex gap-3 pt-1.5">
                 <button
                   type="button"
                   disabled={profileHook.updatingProfile}
