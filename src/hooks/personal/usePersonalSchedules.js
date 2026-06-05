@@ -4,11 +4,21 @@ import { useToast } from "../../contexts/ToastContext";
 import { fetchMySchedules, saveSchedule, deleteSchedule } from "../../utils/supabaseSchedule";
 import { safeLocalStorage, VynoraDeveloperLogger, getLocalDateString } from "../../utils/personalDashboardHelpers";
 
-export function usePersonalSchedules({ dailyRows, analyticsSummary, goals, currentTime, settings }) {
+export function usePersonalSchedules({
+  dailyRows,
+  analyticsSummary,
+  goals,
+  currentTime,
+  settings,
+  schedules: externalSchedules,
+  setSchedules: externalSetSchedules,
+}) {
   const { addToast } = useToast();
   const { workspace, user } = useAuth();
 
-  const [schedules, setSchedules] = useState([]);
+  const [localSchedules, setLocalSchedules] = useState([]);
+  const schedules = externalSchedules !== undefined ? externalSchedules : localSchedules;
+  const setSchedules = externalSetSchedules !== undefined ? externalSetSchedules : setLocalSchedules;
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [showShiftModal, setShowShiftModal] = useState(false);
   const [showPresetModal, setShowPresetModal] = useState(false);

@@ -18,9 +18,26 @@ import {
   minutesToHours,
 } from "../../utils/supabaseAttendance";
 
-export function usePersonalAttendance({ settings, schedules, requireScheduleForDate }) {
+export function usePersonalAttendance({ settings, schedules }) {
   const { addToast } = useToast();
   const { user, workspace, role, profile } = useAuth();
+
+  const getScheduleForDate = (dateStr) => {
+    if (!dateStr) return null;
+    return (schedules || []).find((schedule) => schedule.date === dateStr) || null;
+  };
+
+  const requireScheduleForDate = (dateStr, actionLabel = "create or edit an attendance log") => {
+    const schedule = getScheduleForDate(dateStr);
+    if (schedule) return true;
+
+    addToast(
+      `Please add a Work Schedule for ${dateStr || "this date"} before you ${actionLabel}.`,
+      "warning"
+    );
+    return false;
+  };
+
 
   const [rawRecords, setRawRecords] = useState([]);
   const [loading, setLoading] = useState(true);

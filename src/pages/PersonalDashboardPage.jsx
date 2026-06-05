@@ -228,30 +228,24 @@ function PersonalDashboardPage() {
   // 1. Profile hook
   const profileHook = usePersonalProfile();
 
-  // 2. Schedules hook (Dummy/Reroute base schedules first)
-  const [tempSchedules, setTempSchedules] = useState([]);
-  const schedulesHook = usePersonalSchedules({
-    dailyRows: [],
-    analyticsSummary: {},
-    goals,
-    currentTime: new Date(),
-    settings,
-  });
+  // 2. Lifted schedules state to resolve circular dependency
+  const [schedules, setSchedules] = useState([]);
 
   // 3. Attendance hook (Instantiates complete DTR events grouping)
   const attendanceHook = usePersonalAttendance({
     settings,
-    schedules: schedulesHook.schedules,
-    requireScheduleForDate: schedulesHook.requireScheduleForDate,
+    schedules,
   });
 
   // 4. Schedules hook (Actual instantiation with resolved daily rows and timers)
-  const schedulesHookActual = usePersonalSchedules({
+  const schedulesHook = usePersonalSchedules({
     dailyRows: attendanceHook.dailyRows,
     analyticsSummary: attendanceHook.analyticsSummary,
     goals,
     currentTime: attendanceHook.currentTime,
     settings,
+    schedules,
+    setSchedules,
   });
 
   // 5. Payroll hook
@@ -1148,7 +1142,7 @@ function PersonalDashboardPage() {
                   role={role}
                   analyticsSummary={attendanceHook.analyticsSummary}
                   goals={goals}
-                  goalsProgress={schedulesHookActual.goalsProgress}
+                  goalsProgress={schedulesHook.goalsProgress}
                   dailyRows={attendanceHook.dailyRows}
                   setActiveTab={setActiveTab}
                 />
@@ -1180,9 +1174,9 @@ function PersonalDashboardPage() {
 
               {activeTab === "calendar" && (
                 <PersonalCalendarSection
-                  calendarDate={schedulesHookActual.calendarDate}
-                  setCalendarDate={schedulesHookActual.setCalendarDate}
-                  calendarDays={schedulesHookActual.calendarDays}
+                  calendarDate={schedulesHook.calendarDate}
+                  setCalendarDate={schedulesHook.setCalendarDate}
+                  calendarDays={schedulesHook.calendarDays}
                   currentTime={attendanceHook.currentTime}
                   openEditRow={attendanceHook.openEditRow}
                   diaryNotes={attendanceHook.diaryNotes}
@@ -1195,8 +1189,8 @@ function PersonalDashboardPage() {
 
               {activeTab === "analytics" && (
                 <PersonalInsightsSection
-                  chartPath={schedulesHookActual.chartPath}
-                  earningsPath={schedulesHookActual.earningsPath}
+                  chartPath={schedulesHook.chartPath}
+                  earningsPath={schedulesHook.earningsPath}
                   analyticsSummary={attendanceHook.analyticsSummary}
                 />
               )}
@@ -1251,16 +1245,16 @@ function PersonalDashboardPage() {
               {activeTab === "schedule" && (
                 <PersonalWorkScheduleSection
                   role={role}
-                  setShowPresetModal={schedulesHookActual.setShowPresetModal}
-                  setCurrentWeekOffset={schedulesHookActual.setCurrentWeekOffset}
-                  weekDaysList={schedulesHookActual.weekDaysList}
-                  schedules={schedulesHookActual.schedules}
+                  setShowPresetModal={schedulesHook.setShowPresetModal}
+                  setCurrentWeekOffset={schedulesHook.setCurrentWeekOffset}
+                  weekDaysList={schedulesHook.weekDaysList}
+                  schedules={schedulesHook.schedules}
                   currentTime={attendanceHook.currentTime}
                   settings={settings}
-                  handleDeleteShift={schedulesHookActual.handleDeleteShift}
-                  setSelectedScheduleDate={schedulesHookActual.setSelectedScheduleDate}
-                  setScheduleForm={schedulesHookActual.setScheduleForm}
-                  setShowShiftModal={schedulesHookActual.setShowShiftModal}
+                  handleDeleteShift={schedulesHook.handleDeleteShift}
+                  setSelectedScheduleDate={schedulesHook.setSelectedScheduleDate}
+                  setScheduleForm={schedulesHook.setScheduleForm}
+                  setShowShiftModal={schedulesHook.setShowShiftModal}
                 />
               )}
 
@@ -1487,22 +1481,22 @@ function PersonalDashboardPage() {
         />
 
         <EditShiftModal
-          isOpen={schedulesHookActual.showShiftModal}
-          onClose={() => schedulesHookActual.setShowShiftModal(false)}
-          selectedScheduleDate={schedulesHookActual.selectedScheduleDate}
-          scheduleForm={schedulesHookActual.scheduleForm}
-          setScheduleForm={schedulesHookActual.setScheduleForm}
-          onSubmit={schedulesHookActual.handleSaveShift}
+          isOpen={schedulesHook.showShiftModal}
+          onClose={() => schedulesHook.setShowShiftModal(false)}
+          selectedScheduleDate={schedulesHook.selectedScheduleDate}
+          scheduleForm={schedulesHook.scheduleForm}
+          setScheduleForm={schedulesHook.setScheduleForm}
+          onSubmit={schedulesHook.handleSaveShift}
           submitting={attendanceHook.submitting}
         />
 
         <WeeklyPresetWizardModal
-          isOpen={schedulesHookActual.showPresetModal}
-          onClose={() => schedulesHookActual.setShowPresetModal(false)}
-          weekDaysList={schedulesHookActual.weekDaysList}
-          presetForm={schedulesHookActual.presetForm}
-          setPresetForm={schedulesHookActual.setPresetForm}
-          onSubmit={schedulesHookActual.handleGeneratePreset}
+          isOpen={schedulesHook.showPresetModal}
+          onClose={() => schedulesHook.setShowPresetModal(false)}
+          weekDaysList={schedulesHook.weekDaysList}
+          presetForm={schedulesHook.presetForm}
+          setPresetForm={schedulesHook.setPresetForm}
+          onSubmit={schedulesHook.handleGeneratePreset}
           submitting={attendanceHook.submitting}
         />
 
