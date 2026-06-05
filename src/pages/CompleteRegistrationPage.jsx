@@ -39,15 +39,20 @@ export default function CompleteRegistrationPage() {
 
   const handleCancel = async () => {
     setSubmitting(true);
+    localStorage.removeItem("vynora_oauth_pending_role");
+    localStorage.removeItem("vynora_oauth_pending_workspace");
     try {
       await logout();
-      localStorage.removeItem("vynora_oauth_pending_role");
-      localStorage.removeItem("vynora_oauth_pending_workspace");
-      addToast("Account creation cancelled. Starting over.", "info");
-      navigate("/", { replace: true });
+      addToast("Account registration cancelled.", "info");
+      // Add a small delay to allow Auth state updates to propagate
+      // to the root AuthProvider before navigating, avoiding race conditions.
+      setTimeout(() => {
+        navigate("/", { replace: true });
+        setSubmitting(false);
+      }, 150);
     } catch (err) {
-      setError(err.message || "Failed to cancel registration.");
-    } finally {
+      console.error("Cancellation logout error:", err);
+      navigate("/", { replace: true });
       setSubmitting(false);
     }
   };
